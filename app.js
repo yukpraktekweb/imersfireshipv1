@@ -1,4 +1,4 @@
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzYn9Q-5Ks8T2fePe7PCyYIhQtUq6ZxCh7uszdCFEtquQD0uLDLAC3Rip-1_GmAbB3n/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyZn9Q-5Ks8T2fePe7PCyYIhQtUq6ZxCh7uszdCFEtquQD0uLDLAC3Rip-1_GmAbB3n/exec";
 
 async function apiCall(action, payload = null) {
     if (SCRIPT_URL === "URL_WEB_APP_APPS_SCRIPT_LO_DISINI" || !SCRIPT_URL) {
@@ -256,7 +256,7 @@ function setupUserUI() {
     if (userLicenseCodeEl) userLicenseCodeEl.innerText = user.license || 'TIDAK-ADA-LISENSI';
     
     if (user.role === 'user') {
-        document.querySelectorAll('[data-target="products"], [data-target="orders"], [data-target="users"], [data-target="broadcast"], [data-target="templates"], [data-target="settings"]').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('[data-target="products"], [data-target="orders"], [data-target="coupons"], [data-target="users"], [data-target="broadcast"], [data-target="templates"], [data-target="settings"]').forEach(el => el.classList.add('hidden'));
     }
 
     // --- FITUR BARU: SEMBUNYIKAN OMSET & CHART JIKA BUKAN ADMIN ---
@@ -383,62 +383,62 @@ async function loadAllData() {
 }
 
 /**
- * =========================================================================
- * SETTINGS & LIVE CHAT UI BINDING (FIXED PERSISTENCE)
- * =========================================================================
- */
+ * =========================================================================
+ * SETTINGS & LIVE CHAT UI BINDING (FIXED PERSISTENCE)
+ * =========================================================================
+ */
 function applySettingsUI() {
-    const set = window.appState.settings;
-    if(set.primaryColor) {
-        document.documentElement.style.setProperty('--brand-color', set.primaryColor);
-        document.documentElement.style.setProperty('--brand-hover', set.primaryColor);
-    }
-    if(set.appName) {
-        document.querySelectorAll('.app-name-display').forEach(el => el.innerText = set.appName);
-    }
-    applyLogo(set.logoUrl);
-    
-    const settingAppNameEl = document.getElementById('settingAppName');
-    if (settingAppNameEl) settingAppNameEl.value = set.appName || 'iMersFireship';
-    
-    const settingColorEl = document.getElementById('settingColor');
-    if (settingColorEl) settingColorEl.value = set.primaryColor || '#4f46e5';
-    
-    const settingColorTextEl = document.getElementById('settingColorText');
-    if (settingColorTextEl) settingColorTextEl.value = set.primaryColor || '#4f46e5';
-    
-    const settingLogoUrlEl = document.getElementById('settingLogoUrl');
-    if (settingLogoUrlEl) settingLogoUrlEl.value = set.logoUrl || '';
+    const set = window.appState.settings;
+    if(set.primaryColor) {
+        document.documentElement.style.setProperty('--brand-color', set.primaryColor);
+        document.documentElement.style.setProperty('--brand-hover', set.primaryColor);
+    }
+    if(set.appName) {
+        document.querySelectorAll('.app-name-display').forEach(el => el.innerText = set.appName);
+    }
+    applyLogo(set.logoUrl);
+    
+    const settingAppNameEl = document.getElementById('settingAppName');
+    if (settingAppNameEl) settingAppNameEl.value = set.appName || 'iMersFireship';
+    
+    const settingColorEl = document.getElementById('settingColor');
+    if (settingColorEl) settingColorEl.value = set.primaryColor || '#4f46e5';
+    
+    const settingColorTextEl = document.getElementById('settingColorText');
+    if (settingColorTextEl) settingColorTextEl.value = set.primaryColor || '#4f46e5';
+    
+    const settingLogoUrlEl = document.getElementById('settingLogoUrl');
+    if (settingLogoUrlEl) settingLogoUrlEl.value = set.logoUrl || '';
 
-    if (set.notifications) {
-        const notifWaProviderEl = document.getElementById('notifWaProvider');
-        if (notifWaProviderEl) notifWaProviderEl.value = set.notifications.waProvider || 'fonnte';
-        
-        const notifWaTokenEl = document.getElementById('notifWaToken');
-        if (notifWaTokenEl) notifWaTokenEl.value = set.notifications.waToken || '';
-        
-        const notifAdminWaEl = document.getElementById('notifAdminWa');
-        if (notifAdminWaEl) notifAdminWaEl.value = set.notifications.adminWa || '';
-    }
+    if (set.notifications) {
+        const notifWaProviderEl = document.getElementById('notifWaProvider');
+        if (notifWaProviderEl) notifWaProviderEl.value = set.notifications.waProvider || 'fonnte';
+        
+        const notifWaTokenEl = document.getElementById('notifWaToken');
+        if (notifWaTokenEl) notifWaTokenEl.value = set.notifications.waToken || '';
+        
+        const notifAdminWaEl = document.getElementById('notifAdminWa');
+        if (notifAdminWaEl) notifAdminWaEl.value = set.notifications.adminWa || '';
+    }
 
-    // Setup WA Floating Button dari Database (SINKRONISASI DATABASE)
-    const floatingCheckbox = document.getElementById('settingWaFloatingActive');
-    if (floatingCheckbox) floatingCheckbox.checked = (set.waFloatingActive === true || set.waFloatingActive === 'true');
+    // Setup WA Floating Button dari Database (SINKRONISASI DATABASE)
+    const floatingCheckbox = document.getElementById('settingWaFloatingActive');
+    if (floatingCheckbox) floatingCheckbox.checked = (set.waFloatingActive === true || set.waFloatingActive === 'true');
 
-    const floatingNum = document.getElementById('settingWaFloatingNum');
-    if (floatingNum) floatingNum.value = set.waFloatingNum || '';
+    const floatingNum = document.getElementById('settingWaFloatingNum');
+    if (floatingNum) floatingNum.value = set.waFloatingNum || '';
 
-    const waBtn = document.getElementById('floatingWaBtn');
-    if (waBtn) {
-        const isActive = (set.waFloatingActive === true || set.waFloatingActive === 'true');
-        if (isActive && set.waFloatingNum) {
-            let cleanWa = window.formatPhoneNumber(set.waFloatingNum);
-            waBtn.href = `https://wa.me/${cleanWa}?text=Halo%20Admin,%20saya%20ingin%20bertanya%20tentang%20produk%20Anda...`;
-            waBtn.classList.remove('hidden');
-        } else {
-            waBtn.classList.add('hidden');
-        }
-    }
+    const waBtn = document.getElementById('floatingWaBtn');
+    if (waBtn) {
+        const isActive = (set.waFloatingActive === true || set.waFloatingActive === 'true');
+        if (isActive && set.waFloatingNum) {
+            let cleanWa = window.formatPhoneNumber(set.waFloatingNum);
+            waBtn.href = `https://wa.me/${cleanWa}?text=Halo%20Admin,%20saya%20ingin%20bertanya%20tentang%20produk%20Anda...`;
+            waBtn.classList.remove('hidden');
+        } else {
+            waBtn.classList.add('hidden');
+        }
+    }
 }
 
 // --- AUTH LOGIC ---
@@ -732,13 +732,23 @@ window.renderUsersTable = () => {
         };
         const roleClass = roleColors[u.role] || roleColors['user'];
 
+        // --- DETAIL REKENING AFFILIATE UNTUK ADMIN ---
+        let bankInfo = '<span class="text-slate-400 italic text-xs">Belum diatur</span>';
+        if(u.bankName || u.bankNo) {
+            bankInfo = `<div class="bg-brand/5 p-2 rounded-lg border border-brand/10">
+                <p class="text-[11px] font-black text-brand uppercase">${u.bankName || '???'}</p>
+                <p class="text-xs font-mono font-bold text-slate-700 dark:text-white">${u.bankNo || '???'}</p>
+                <p class="text-[10px] text-slate-500 italic">a.n ${u.bankOwner || '???'}</p>
+            </div>`;
+        }
+
         tbody.innerHTML += `
             <tr class="hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors">
                 <td class="px-6 py-4">
                     <p class="font-bold text-slate-800 dark:text-white text-base">${u.name}</p>
                     <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">${u.email}</p>
                 </td>
-                <td class="px-6 py-4 font-medium text-slate-700 dark:text-slate-300">${u.wa || '-'}</td>
+                <td class="px-6 py-4">${bankInfo}</td>
                 <td class="px-6 py-4">
                     <span class="${roleClass} px-3 py-1 rounded-lg text-xs font-black uppercase">${u.role}</span>
                 </td>
@@ -838,10 +848,10 @@ window.deleteUser = async (id) => {
 };
 
 /**
- * =========================================================================
- * AFFILIATE SYSTEM LOGIC (DUAL LINKS - INTERNAL FIXED)
- * =========================================================================
- */
+ * =========================================================================
+ * AFFILIATE SYSTEM LOGIC (DUAL LINKS - INTERNAL FIXED)
+ * =========================================================================
+ */
 window.renderAffiliateList = () => {
     const container = document.getElementById('affiliateProductsList');
     const refCodeEl = document.getElementById('affiliateRefCode');
@@ -924,7 +934,7 @@ window.renderAffiliateList = () => {
                         <label class="block text-[10px] font-black text-brand uppercase mb-1 ml-1">Link Checkout Langsung</label>
                         <div class="flex gap-2">
                             <input type="text" readonly value="${affCheckoutLink}" class="flex-1 px-3 py-2 bg-brand/5 border border-brand/20 rounded-xl text-[11px] font-bold text-brand outline-none">
-                            <button onclick="copyTextToClipboard('${affCheckoutLink}')" class="bg-brand text-white p-2 rounded-xl shadow-lg shadow-brand/20 transition-transform active:scale-95">
+                            <button onclick="copyTextToClipboard('${affCheckoutLink}')" class="bg-brand text-white p-2 rounded-xl shadow-lg shadow-brand/30 transition-transform active:scale-95">
                                 <i class="ph ph-copy"></i>
                             </button>
                         </div>
@@ -2118,23 +2128,6 @@ window.applyLogo = (src) => {
         if(appIconAuth) appIconAuth.classList.remove('hidden');
     }
 };
-
-function updateDashboardStats() {
-    if (document.getElementById('statProducts')) document.getElementById('statProducts').innerText = window.appState.products.length;
-    if (document.getElementById('statUsers')) document.getElementById('statUsers').innerText = window.appState.usersData.length;
-    
-    let rev = 0;
-    let ord = 0;
-    window.appState.orders.forEach(o => {
-        if(o.status === 'Paid') {
-            rev += Number(o.totalPay || 0);
-            ord++;
-        }
-    });
-
-    if (document.getElementById('statRevenue')) document.getElementById('statRevenue').innerText = window.formatRp(rev);
-    if (document.getElementById('statOrders')) document.getElementById('statOrders').innerText = ord;
-}
 
 window.showToast = (msg, type = 'success') => {
     const toast = document.getElementById('toast');
