@@ -6,19 +6,25 @@ async function apiCall(action, payload = null) {
         throw new Error("URL Belum disetting");
     }
     
-    let url = `${SCRIPT_URL}?action=${action}`;
+    // Pastikan URL bersih dari spasi yang nggak sengaja ke-copy
+    const cleanUrl = SCRIPT_URL.trim();
+    let url = `${cleanUrl}?action=${action}`;
     
     // Konfigurasi fetch standar untuk Google Apps Script
     // redirect: 'follow' wajib karena Google selalu melakukan redirect internal
     let options = { 
         method: 'GET', 
-        redirect: 'follow' 
+        redirect: 'follow',
+        mode: 'cors'
     };
 
     if (payload) {
         options.method = 'POST';
-        // KUNCI PERBAIKAN: Gunakan text/plain untuk membungkus JSON.
-        // Ini trik supaya browser tidak mengirim request OPTIONS (Preflight) yang sering ditolak Google.
+        /**
+         * KUNCI PERBAIKAN CORS: 
+         * Kita gunakan 'text/plain'. Kalau pakai 'application/json', browser bakal kirim 
+         * request OPTIONS (Preflight) yang sering ditolak mentah-mentah sama Google.
+         */
         options.headers = { 'Content-Type': 'text/plain;charset=utf-8' };
         options.body = JSON.stringify(payload);
     }
@@ -35,9 +41,11 @@ async function apiCall(action, payload = null) {
         try {
             data = JSON.parse(text); 
         } catch(e) {
-            // Jika error di sini, artinya Google Apps Script mengirim halaman HTML Error (Crash di sisi server).
+            /** * Kalau masuk sini, artinya GAS lo ngirim HTML Error (Backend Crash).
+             * Browser nangkep ini sebagai CORS error karena halaman HTML Google nggak punya header CORS.
+             */
             console.error("Respon bukan JSON (Kemungkinan GAS Error):", text);
-            throw new Error("Gagal konek ke DB! Pastikan URL Apps Script sudah di-Deploy (Anyone) & Izin Akses diberikan.");
+            throw new Error("Gagal konek ke DB! Cek tab 'Executions' di Editor Apps Script untuk lihat error kodenya.");
         }
         
         if (!data.success) throw new Error(data.error || "Terjadi kesalahan pada server");
@@ -46,7 +54,7 @@ async function apiCall(action, payload = null) {
         console.error(`API Call Error (${action}) -> ${url}:`, err);
         
         if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
-            throw new Error("Koneksi ditolak Google! Wajib Deploy ulang Apps Script pakai 'Versi Baru' & Akses 'Siapa Saja'.");
+            throw new Error("Koneksi ditolak Google! Pastikan di GAS lo fungsinya sudah di-Return pakai ContentService.createTextOutput.");
         }
         
         throw err;
