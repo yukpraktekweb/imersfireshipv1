@@ -1,4 +1,4 @@
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKP0Utrdz5tZyXe9_x3oe49bjj_sm9acGPY_j-I0XGvYTYByfQA5_W_VEa-IVCnCrW/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzYn9Q-5Ks8T2fePe7PCyYIhQtUq6ZxCh7uszdCFEtquQD0uLDLAC3Rip-1_GmAbB3n/exec";
 
 async function apiCall(action, payload = null) {
     if (SCRIPT_URL === "URL_WEB_APP_APPS_SCRIPT_LO_DISINI" || !SCRIPT_URL) {
