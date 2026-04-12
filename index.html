@@ -1,1 +1,1229 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iMersFireship - Digital Product Platform</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
+    <!-- Configure Tailwind to use CSS variables & Dark Mode -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: 'var(--brand-color, #4f46e5)',
+                        brandHover: 'var(--brand-hover, #4338ca)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Panggil File CSS Eksternal -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="text-slate-800 dark:text-slate-100 antialiased h-screen overflow-hidden flex flex-col transition-colors duration-300">
+
+    <!-- ==========================================
+         CHECKOUT VIEW (PUBLIC)
+         ========================================== -->
+    <div id="view-checkout" class="hidden flex-1 overflow-y-auto relative w-full z-50 py-8 px-4">
+        <div class="max-w-xl mx-auto space-y-5 pb-24">
+            
+            <div id="coLoginHelper" class="glass rounded-2xl p-4 flex justify-between items-center border border-brand/30 bg-brand/5 hidden">
+                <div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Sudah punya akun?</p>
+                    <p class="font-bold text-sm text-slate-800 dark:text-white">Login untuk checkout lebih cepat.</p>
+                </div>
+                <button onclick="gotoLoginFromCheckout()" class="bg-white/80 dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 px-4 py-2 rounded-xl text-sm font-bold text-brand hover:text-brandHover transition-colors">Login</button>
+            </div>
+
+            <div class="glass rounded-2xl overflow-hidden">
+                <div class="bg-white/40 dark:bg-slate-800/40 py-3 text-center font-bold text-slate-700 dark:text-slate-200 text-sm border-b border-white/50 dark:border-slate-700/50">Order Details</div>
+                <div class="p-5">
+                    <div class="flex items-center gap-4 mb-5">
+                        <div id="coProdImageContainer" class="w-14 h-14 bg-gradient-to-br from-brand to-purple-500 rounded-xl flex items-center justify-center text-white text-3xl shadow-lg shadow-brand/30 shrink-0">
+                            <i class="ph ph-package"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h3 id="coProdTitle" class="font-bold text-slate-800 dark:text-white text-lg">Memuat Produk...</h3>
+                            <p id="coProdPrice" class="text-sm font-bold text-brand dark:text-brandHover">Rp 0</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-between text-sm text-slate-500 dark:text-slate-400 mb-2">
+                        <span>Transaction Fees</span>
+                        <span id="coFee">- Rp. 0</span>
+                    </div>
+                    <div id="coDiscountRow" class="flex justify-between text-sm text-green-500 font-bold mb-2 hidden">
+                        <span>Discount (<span id="coDiscountCodeDisplay"></span>)</span>
+                        <span id="coDiscountAmount">- Rp. 0</span>
+                    </div>
+                    <div class="flex justify-between font-bold text-slate-800 dark:text-white border-t border-slate-200 dark:border-slate-700 pt-3 mb-4">
+                        <span>Total</span>
+                        <span id="coTotal" class="text-red-500 dark:text-red-400 text-lg">Rp. 0</span>
+                    </div>
+                    <div class="text-xs text-emerald-500 font-bold flex items-center gap-1 bg-emerald-500/10 px-3 py-1.5 rounded-lg w-max"><i class="ph ph-shield-check text-lg"></i> Secure 100%</div>
+                </div>
+            </div>
+
+            <div class="glass rounded-2xl p-5">
+                <p class="text-sm font-bold text-slate-700 dark:text-slate-200 mb-1">Voucher Diskon</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Masukkan kode diskon jika memilikinya</p>
+                <div class="flex gap-2">
+                    <input type="text" id="coVoucherInput" placeholder="KODE DISKON" class="flex-1 px-4 py-2 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm uppercase focus:ring-2 focus:ring-brand dark:text-white">
+                    <button type="button" onclick="applyVoucher()" id="btnApplyVoucher" class="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 shadow-lg shadow-green-500/30 text-white font-bold px-5 py-2 rounded-xl text-sm transition-all">PAKAI</button>
+                </div>
+                <p id="coVoucherMsg" class="text-xs mt-2 hidden"></p>
+            </div>
+
+            <div class="glass rounded-2xl p-6">
+                <!-- State jika User sudah Login -->
+                <div id="coLoggedInState" class="hidden mb-6 bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-xl flex justify-between items-center">
+                    <div>
+                        <p class="text-xs font-bold text-emerald-600 dark:text-emerald-400 mb-1"><i class="ph ph-check-circle"></i> Checkout Cepat</p>
+                        <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Checkout sebagai: <strong id="coLoggedInName">Nama User</strong></p>
+                    </div>
+                    <button type="button" onclick="logout(); window.location.reload();" class="text-xs text-red-500 font-bold hover:underline">Ganti Akun</button>
+                </div>
+
+                <div id="coGuestState">
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed bg-white/30 dark:bg-slate-800/30 p-3 rounded-xl border border-white/40 dark:border-slate-700/50">Isi data-data di bawah untuk bisa mengakses member area serta informasi terkait pembelian.</p>
+                    <h3 class="font-bold text-slate-800 dark:text-white mb-4 text-lg">Create an Account</h3>
+                </div>
+
+                <form id="checkoutForm" class="space-y-4">
+                    <div id="coAuthFields">
+                        <div class="mb-4">
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Full Name <span class="text-red-500">*</span></label>
+                            <input type="text" id="coName" placeholder="Masukkan nama lengkap" class="w-full px-4 py-2 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm focus:border-brand dark:text-white">
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Email Address <span class="text-red-500">*</span></label>
+                            <input type="email" id="coEmail" placeholder="Masukkan email aktif" class="w-full px-4 py-2 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm focus:border-brand dark:text-white">
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Create Password <span class="text-red-500">*</span></label>
+                            <input type="password" id="coPassword" placeholder="Buat password" class="w-full px-4 py-2 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm focus:border-brand dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nomor WhatsApp <span class="text-red-500">*</span></label>
+                            <input type="text" id="coWA" placeholder="Nomor WA aktif" class="w-full px-4 py-2 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm focus:border-brand dark:text-white">
+                        </div>
+                    </div>
+
+                    <div class="border-t border-slate-200 dark:border-slate-700 pt-5 mt-5">
+                        <h3 class="font-bold text-slate-800 dark:text-white mb-4 text-sm">Select Payment Method <span class="text-red-500">*</span></h3>
+                        <div id="coPaymentMethods" class="space-y-3">
+                            <!-- Dynamic Payment Methods injected here -->
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="fixed bottom-0 left-0 w-full glass rounded-t-2xl shadow-[0_-4px_25px_-5px_rgba(0,0,0,0.1)] p-4 z-50">
+                <div class="max-w-xl mx-auto flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                    <div class="flex flex-col">
+                        <p class="text-xs font-bold text-slate-500 dark:text-slate-400">Total Pay</p>
+                        <p id="coTotalPay" class="text-xl font-black text-red-500 dark:text-red-400">Rp. 0</p>
+                        <!-- Affiliate Label -->
+                        <div id="coAffiliateBadgeContainer" class="hidden mt-1">
+                            <span class="bg-brand/10 text-brand text-[10px] px-2 py-0.5 rounded-full font-bold inline-flex items-center gap-1">
+                                <i class="ph ph-handshake"></i> Ref: <span id="coAffiliateNameDisplay"></span>
+                            </span>
+                        </div>
+                    </div>
+                    <button type="button" onclick="submitCheckout()" id="btnSubmitCheckout" class="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-green-500/30 transition-all w-full sm:w-auto text-sm">
+                        CREATE ORDER
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         AUTH VIEWS (LOGIN, REGISTER, FORGOT PWD)
+         ========================================== -->
+    <div id="view-auth" class="flex-1 flex items-center justify-center relative h-screen w-full z-50 p-4 overflow-y-auto">
+        <div class="w-full max-w-md p-8 glass rounded-3xl shadow-2xl relative z-10 mx-auto border border-white/50 dark:border-slate-700/50 my-auto">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-brand to-purple-600 shadow-lg shadow-brand/30 text-white mb-5 overflow-hidden" id="authLogoContainer">
+                    <img id="appLogoAuth" src="" alt="Logo" class="w-full h-full object-cover hidden">
+                    <i id="appIconAuth" class="ph ph-rocket-launch text-4xl"></i>
+                </div>
+                <h1 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-brand to-purple-500 app-name-display">iMersFireship</h1>
+                <p id="authSubtitle" class="text-slate-500 dark:text-slate-400 text-sm mt-2 font-medium">Admin & User Login</p>
+            </div>
+
+            <!-- LOGIN FORM -->
+            <form id="loginForm" class="space-y-5">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Email</label>
+                    <input type="email" id="loginEmail" placeholder="admin@imersfireship.com" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Password</label>
+                    <input type="password" id="loginPassword" placeholder="admin123" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium" required>
+                </div>
+                <div class="pt-2">
+                    <button type="submit" id="loginBtn" class="w-full bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-brand/30 transition-all flex justify-center items-center gap-2 text-lg">
+                        <span>Sign In</span>
+                        <i class="ph ph-sign-in"></i>
+                    </button>
+                </div>
+                <div class="flex items-center justify-between text-sm font-bold mt-4 px-1">
+                    <a href="#" onclick="switchAuthView('forgot')" class="text-slate-500 dark:text-slate-400 hover:text-brand dark:hover:text-brand transition-colors">Lupa Password?</a>
+                    <a href="#" onclick="switchAuthView('register')" class="text-brand dark:text-brandHover hover:underline transition-colors">Daftar Baru</a>
+                </div>
+            </form>
+
+            <!-- REGISTER FORM -->
+            <form id="registerForm" class="space-y-4 hidden">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Lengkap</label>
+                    <input type="text" id="regName" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Email</label>
+                    <input type="email" id="regEmail" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">No WhatsApp</label>
+                    <input type="text" id="regWa" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Password</label>
+                    <input type="password" id="regPassword" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium" required>
+                </div>
+                <div class="pt-2">
+                    <button type="submit" id="regBtn" class="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-green-500/30 transition-all flex justify-center items-center gap-2 text-lg">
+                        <span>Daftar Sekarang</span>
+                        <i class="ph ph-user-plus"></i>
+                    </button>
+                </div>
+                <div class="text-center text-sm font-bold mt-4">
+                    <span class="text-slate-500 dark:text-slate-400">Sudah punya akun?</span>
+                    <a href="#" onclick="switchAuthView('login')" class="text-brand dark:text-brandHover hover:underline transition-colors ml-1">Masuk di sini</a>
+                </div>
+            </form>
+
+            <!-- FORGOT PASSWORD FORM -->
+            <form id="forgotForm" class="space-y-5 hidden">
+                <p class="text-sm text-slate-600 dark:text-slate-400 text-center mb-4 leading-relaxed">Masukkan email Anda di bawah ini. Kami akan mengirimkan instruksi untuk mereset password Anda.</p>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Email Terdaftar</label>
+                    <input type="email" id="forgotEmail" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium" required>
+                </div>
+                <div class="pt-2">
+                    <button type="submit" id="forgotBtn" class="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-amber-500/30 transition-all flex justify-center items-center gap-2 text-lg">
+                        <span>Kirim Reset Link</span>
+                        <i class="ph ph-paper-plane-tilt"></i>
+                    </button>
+                </div>
+                <div class="text-center text-sm font-bold mt-4 border-t border-slate-200 dark:border-slate-700 pt-5">
+                    <a href="#" onclick="switchAuthView('login')" class="text-slate-500 dark:text-slate-400 hover:text-brand dark:hover:text-brand transition-colors flex items-center justify-center gap-1">
+                        <i class="ph ph-arrow-left"></i> Kembali ke Login
+                    </a>
+                </div>
+            </form>
+            
+        </div>
+    </div>
+
+    <!-- ==========================================
+         MAIN APPLICATION LAYOUT (Logged In)
+         ========================================== -->
+    <div id="view-app" class="hidden flex-1 flex h-screen w-full overflow-hidden">
+        
+        <!-- SIDEBAR -->
+        <aside id="sidebar" class="w-64 glass border-r border-white/40 dark:border-slate-700/50 flex flex-col transition-all duration-300 absolute md:relative z-40 h-full -translate-x-full md:translate-x-0 shadow-xl">
+            <div class="h-20 flex items-center px-6 border-b border-white/20 dark:border-slate-700/50">
+                <img id="appLogoSidebar" src="" alt="Logo" class="h-8 w-8 object-contain mr-3 hidden">
+                <div class="w-8 h-8 rounded bg-gradient-to-br from-brand to-purple-500 flex items-center justify-center mr-3 text-white shadow-md shadow-brand/20" id="appIconSidebarBg">
+                    <i id="appIconSidebar" class="ph ph-rocket-launch text-xl"></i>
+                </div>
+                <span class="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-brand to-purple-600 dark:from-indigo-400 dark:to-purple-400 tracking-wide app-name-display">iMersFireship</span>
+            </div>
+
+            <div class="flex-1 overflow-y-auto py-6 px-4 space-y-1">
+                <p class="px-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 mt-2">Main Menu</p>
+                <a href="#" onclick="navigate('dashboard')" class="nav-link active group flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/40 dark:hover:bg-slate-800/40 transition-all text-sm font-semibold text-slate-600 dark:text-slate-300" data-target="dashboard">
+                    <i class="ph ph-squares-four text-xl text-blue-500 group-[.active]:text-white transition-colors"></i> Dashboard
+                </a>
+                <a href="#" onclick="navigate('products')" class="nav-link group flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/40 dark:hover:bg-slate-800/40 transition-all text-sm font-semibold text-slate-600 dark:text-slate-300" data-target="products">
+                    <i class="ph ph-package text-xl text-purple-500 group-[.active]:text-white transition-colors"></i> Products
+                </a>
+                <a href="#" onclick="navigate('marketplace')" class="nav-link group flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/40 dark:hover:bg-slate-800/40 transition-all text-sm font-semibold text-slate-600 dark:text-slate-300" data-target="marketplace">
+                    <i class="ph ph-storefront text-xl text-pink-500 group-[.active]:text-white transition-colors"></i> Marketplace
+                </a>
+                
+                <p class="px-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 mt-6">Sales & Users</p>
+                <a href="#" onclick="navigate('orders')" class="nav-link group flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/40 dark:hover:bg-slate-800/40 transition-all text-sm font-semibold text-slate-600 dark:text-slate-300" data-target="orders">
+                    <i class="ph ph-shopping-cart text-xl text-orange-500 group-[.active]:text-white transition-colors"></i> Orders 
+                    <span class="ml-auto bg-orange-500 text-white text-[10px] px-2 py-0.5 rounded-full shadow-sm">New</span>
+                </a>
+                <a href="#" onclick="navigate('license')" class="nav-link group flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/40 dark:hover:bg-slate-800/40 transition-all text-sm font-semibold text-slate-600 dark:text-slate-300" data-target="license">
+                    <i class="ph ph-key text-xl text-amber-500 group-[.active]:text-white transition-colors"></i> License Code
+                </a>
+                <a href="#" onclick="navigate('coupons')" class="nav-link group flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/40 dark:hover:bg-slate-800/40 transition-all text-sm font-semibold text-slate-600 dark:text-slate-300" data-target="coupons">
+                    <i class="ph ph-ticket text-xl text-emerald-500 group-[.active]:text-white transition-colors"></i> Kupon Diskon
+                </a>
+                <a href="#" onclick="navigate('users')" class="nav-link group flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/40 dark:hover:bg-slate-800/40 transition-all text-sm font-semibold text-slate-600 dark:text-slate-300" data-target="users">
+                    <i class="ph ph-users text-xl text-teal-500 group-[.active]:text-white transition-colors"></i> Users
+                </a>
+                <a href="#" onclick="navigate('affiliate')" class="nav-link group flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/40 dark:hover:bg-slate-800/40 transition-all text-sm font-semibold text-slate-600 dark:text-slate-300" data-target="affiliate">
+                    <i class="ph ph-handshake text-xl text-yellow-500 group-[.active]:text-white transition-colors"></i> Affiliate
+                </a>
+
+                <p class="px-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 mt-6">Marketing & Config</p>
+                <a href="#" onclick="navigate('broadcast')" class="nav-link group flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/40 dark:hover:bg-slate-800/40 transition-all text-sm font-semibold text-slate-600 dark:text-slate-300" data-target="broadcast">
+                    <i class="ph ph-paper-plane-tilt text-xl text-cyan-500 group-[.active]:text-white transition-colors"></i> Broadcast WA
+                </a>
+                <a href="#" onclick="navigate('templates')" class="nav-link group flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/40 dark:hover:bg-slate-800/40 transition-all text-sm font-semibold text-slate-600 dark:text-slate-300" data-target="templates">
+                    <i class="ph ph-envelope-simple text-xl text-rose-500 group-[.active]:text-white transition-colors"></i> Notif Templates
+                </a>
+                <a href="#" onclick="navigate('settings')" class="nav-link group flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/40 dark:hover:bg-slate-800/40 transition-all text-sm font-semibold text-slate-600 dark:text-slate-300" data-target="settings">
+                    <i class="ph ph-gear text-xl text-slate-400 group-[.active]:text-white transition-colors"></i> Admin Settings
+                </a>
+
+                <p class="px-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 mt-6">Account</p>
+                <a href="#" onclick="navigate('profile')" class="nav-link group flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/40 dark:hover:bg-slate-800/40 transition-all text-sm font-semibold text-slate-600 dark:text-slate-300" data-target="profile">
+                    <i class="ph ph-user-circle text-xl text-blue-500 group-[.active]:text-white transition-colors"></i> My Profile
+                </a>
+            </div>
+
+            <div class="p-5 border-t border-white/20 dark:border-slate-700/50">
+                <button onclick="logout()" class="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-500 hover:text-white transition-all font-bold text-sm border border-red-500/20 shadow-sm">
+                    <i class="ph ph-sign-out text-xl"></i> Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-1 flex flex-col h-full overflow-hidden relative w-full">
+            <!-- TOPBAR -->
+            <header class="h-20 glass border-b border-white/40 dark:border-slate-700/50 flex items-center justify-between px-6 shrink-0 z-30">
+                <div class="flex items-center gap-4">
+                    <button id="mobileMenuBtn" class="md:hidden w-10 h-10 rounded-xl bg-white/50 dark:bg-slate-800/50 flex items-center justify-center text-slate-600 dark:text-slate-300 shadow-sm border border-white/40 dark:border-slate-700/50">
+                        <i class="ph ph-list text-2xl"></i>
+                    </button>
+                    <h2 id="pageTitle" class="text-xl font-black text-slate-800 dark:text-white hidden sm:block tracking-tight">Dashboard</h2>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <button onclick="toggleTheme()" class="w-10 h-10 rounded-xl bg-white/50 dark:bg-slate-800/50 flex items-center justify-center text-yellow-500 dark:text-blue-400 shadow-sm border border-white/40 dark:border-slate-700/50 hover:scale-105 transition-transform">
+                        <i id="themeIcon" class="ph ph-moon text-xl"></i>
+                    </button>
+
+                    <button class="w-10 h-10 rounded-xl bg-white/50 dark:bg-slate-800/50 flex items-center justify-center text-slate-600 dark:text-slate-300 shadow-sm border border-white/40 dark:border-slate-700/50 relative">
+                        <i class="ph ph-bell text-xl"></i>
+                        <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full shadow-sm shadow-red-500/50"></span>
+                    </button>
+                    
+                    <div class="flex items-center gap-3 pl-4 border-l border-slate-300/50 dark:border-slate-700/50">
+                        <div class="text-right hidden sm:block">
+                            <p class="text-sm font-bold text-slate-800 dark:text-white" id="userDisplayName">Admin User</p>
+                            <p class="text-[10px] font-bold text-brand tracking-widest uppercase" id="userRoleDisplay">Administrator</p>
+                        </div>
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand to-purple-500 flex items-center justify-center text-white font-black shadow-md shadow-brand/20">
+                            <i class="ph ph-user"></i>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- SCROLLABLE CONTENT -->
+            <div class="flex-1 overflow-y-auto p-4 sm:p-8 pb-24">
+                
+                <!-- DASHBOARD VIEW -->
+                <div id="content-dashboard" class="content-section space-y-8">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="glass rounded-2xl p-6 relative overflow-hidden group">
+                            <div class="absolute -right-6 -top-6 w-24 h-24 bg-green-500/20 rounded-full blur-2xl group-hover:bg-green-500/30 transition-all"></div>
+                            <div class="flex items-center justify-between relative z-10">
+                                <div>
+                                    <p class="text-sm text-slate-500 dark:text-slate-400 font-bold mb-1">Total Revenue</p>
+                                    <h3 id="statRevenue" class="text-2xl font-black text-slate-800 dark:text-white">Rp 0</h3>
+                                </div>
+                                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white text-2xl shadow-lg shadow-green-500/30">
+                                    <i class="ph ph-money"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="glass rounded-2xl p-6 relative overflow-hidden group">
+                            <div class="absolute -right-6 -top-6 w-24 h-24 bg-blue-500/20 rounded-full blur-2xl group-hover:bg-blue-500/30 transition-all"></div>
+                            <div class="flex items-center justify-between relative z-10">
+                                <div>
+                                    <p class="text-sm text-slate-500 dark:text-slate-400 font-bold mb-1">Total Products</p>
+                                    <h3 class="text-2xl font-black text-slate-800 dark:text-white" id="statProducts">0</h3>
+                                </div>
+                                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-white text-2xl shadow-lg shadow-blue-500/30">
+                                    <i class="ph ph-package"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="glass rounded-2xl p-6 relative overflow-hidden group">
+                            <div class="absolute -right-6 -top-6 w-24 h-24 bg-purple-500/20 rounded-full blur-2xl group-hover:bg-purple-500/30 transition-all"></div>
+                            <div class="flex items-center justify-between relative z-10">
+                                <div>
+                                    <p class="text-sm text-slate-500 dark:text-slate-400 font-bold mb-1">Total Users</p>
+                                    <h3 class="text-2xl font-black text-slate-800 dark:text-white" id="statUsers">0</h3>
+                                </div>
+                                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-400 to-fuchsia-600 flex items-center justify-center text-white text-2xl shadow-lg shadow-purple-500/30">
+                                    <i class="ph ph-users"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="glass rounded-2xl p-6 relative overflow-hidden group">
+                            <div class="absolute -right-6 -top-6 w-24 h-24 bg-orange-500/20 rounded-full blur-2xl group-hover:bg-orange-500/30 transition-all"></div>
+                            <div class="flex items-center justify-between relative z-10">
+                                <div>
+                                    <p class="text-sm text-slate-500 dark:text-slate-400 font-bold mb-1">Active Orders</p>
+                                    <h3 class="text-2xl font-black text-slate-800 dark:text-white" id="statOrders">0</h3>
+                                </div>
+                                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-400 to-rose-500 flex items-center justify-center text-white text-2xl shadow-lg shadow-orange-500/30">
+                                    <i class="ph ph-shopping-cart"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2 glass rounded-2xl p-6">
+                            <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-6">Revenue Overview</h3>
+                            <canvas id="salesChart" height="100"></canvas>
+                        </div>
+                        <div class="glass rounded-2xl p-6">
+                            <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-6">Recent Orders</h3>
+                            <div class="space-y-4" id="recentOrdersList">
+                                <p class="text-sm text-slate-500 text-center py-4">Memuat data...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PRODUCTS VIEW -->
+                <div id="content-products" class="content-section hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
+                        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Manage your digital downloads and courses here.</p>
+                        <button onclick="openProductModal()" class="bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 shadow-lg shadow-brand/30 text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all">
+                            <i class="ph ph-plus-circle text-xl"></i> Add Product
+                        </button>
+                    </div>
+                    <div class="glass border border-blue-200 dark:border-blue-900/50 p-4 rounded-2xl text-sm text-blue-800 dark:text-blue-200 flex items-start sm:items-center gap-3 shadow-sm relative overflow-hidden">
+                        <div class="absolute inset-0 bg-blue-500/10 dark:bg-blue-500/20"></div>
+                        <i class="ph ph-info text-2xl shrink-0 relative z-10 text-blue-500"></i>
+                        <p class="relative z-10"><strong>Affiliate Ready:</strong> Edit produk untuk mengatur komisi dan link eksternal (Salespage) untuk Affiliate.</p>
+                    </div>
+                    <div class="glass rounded-2xl overflow-hidden shadow-xl">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                                <thead class="bg-white/40 dark:bg-slate-800/40 text-slate-800 dark:text-slate-200 border-b border-white/50 dark:border-slate-700/50">
+                                    <tr>
+                                        <th class="px-6 py-4 font-bold">Product Name</th>
+                                        <th class="px-6 py-4 font-bold">Type</th>
+                                        <th class="px-6 py-4 font-bold">Price</th>
+                                        <th class="px-6 py-4 font-bold text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="productsTableBody" class="divide-y divide-white/20 dark:divide-slate-700/50">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ORDERS VIEW -->
+                <div id="content-orders" class="content-section hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
+                        <div>
+                            <h3 class="text-2xl font-black text-slate-800 dark:text-white">Order Management</h3>
+                            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Verifikasi dan kelola pesanan masuk.</p>
+                        </div>
+                    </div>
+                    <div class="glass rounded-2xl overflow-hidden shadow-xl">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                                <thead class="bg-white/40 dark:bg-slate-800/40 text-slate-800 dark:text-slate-200 border-b border-white/50 dark:border-slate-700/50">
+                                    <tr>
+                                        <th class="px-6 py-4 font-bold">Order ID</th>
+                                        <th class="px-6 py-4 font-bold">Customer</th>
+                                        <th class="px-6 py-4 font-bold">Product</th>
+                                        <th class="px-6 py-4 font-bold">Total</th>
+                                        <th class="px-6 py-4 font-bold">Status</th>
+                                        <th class="px-6 py-4 font-bold text-right">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ordersTableBody" class="divide-y divide-white/20 dark:divide-slate-700/50">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MARKETPLACE VIEW -->
+                <div id="content-marketplace" class="content-section hidden space-y-6">
+                    <div class="mb-4">
+                        <h3 class="text-2xl font-black text-slate-800 dark:text-white">My Marketplace</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Katalog semua produk digital dan Course yang Anda jual.</p>
+                    </div>
+                    <div id="marketplaceList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    </div>
+                    <!-- Single Product Access Viewer -->
+                    <div id="productViewer" class="hidden glass rounded-3xl overflow-hidden flex flex-col relative h-[80vh] shadow-2xl">
+                        <div class="p-6 border-b border-white/40 dark:border-slate-700/50 flex justify-between items-center bg-white/30 dark:bg-slate-800/30 shrink-0">
+                            <div>
+                                <h3 id="pvTitle" class="text-2xl font-black text-slate-800 dark:text-white">Product Title</h3>
+                                <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/20 px-3 py-1 rounded-lg mt-2 inline-block">Access Granted</span>
+                            </div>
+                            <button onclick="closeProductViewer()" class="text-slate-600 dark:text-slate-300 hover:text-brand dark:hover:text-brand bg-white/50 dark:bg-slate-700/50 px-4 py-2 rounded-xl transition-all font-bold text-sm flex items-center gap-2 shadow-sm border border-white/40 dark:border-slate-600"><i class="ph ph-arrow-left text-lg"></i> Back</button>
+                        </div>
+                        <div class="flex-1 overflow-y-auto p-6 md:p-8 flex flex-col gap-8">
+                            <div id="pvStructuredArea" class="w-full"></div>
+                            <div id="pvHtmlArea" class="prose max-w-none text-slate-700 dark:text-slate-300 bg-amber-50/50 dark:bg-amber-900/20 p-6 rounded-2xl border border-amber-200/50 dark:border-amber-700/30 shadow-inner hidden backdrop-blur-sm"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LICENSE VIEW -->
+                <div id="content-license" class="content-section hidden space-y-6">
+                    <div class="mb-4">
+                        <h3 class="text-2xl font-black text-slate-800 dark:text-white">My License</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Gunakan kode lisensi ini untuk aktivasi layanan atau produk khusus Anda.</p>
+                    </div>
+                    <div class="glass rounded-3xl shadow-xl p-8 border border-white/40 dark:border-slate-700/50 max-w-2xl">
+                        <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left">
+                            <div class="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
+                                <i class="ph ph-shield-check text-4xl text-emerald-500"></i>
+                            </div>
+                            <div class="flex-1 w-full">
+                                <h4 class="text-lg font-bold text-slate-700 dark:text-slate-300 mb-1">Lisensi Aktif Anda</h4>
+                                <p class="text-sm text-slate-500 dark:text-slate-400 mb-5">Kode di bawah otomatis ter-generate sesuai akun Anda.</p>
+                                <div class="bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                    <code id="userLicenseCode" class="text-xl font-black text-brand dark:text-brandHover tracking-widest uppercase">Memuat...</code>
+                                    <button onclick="copyLicenseCode()" class="bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-brand/30 flex items-center gap-2 shrink-0 text-sm">
+                                        <i class="ph ph-copy text-lg"></i> Salin Kode
+                                    </button>
+                                </div>
+                                <div class="mt-5 text-xs text-slate-500 dark:text-slate-400 flex items-start gap-2 bg-amber-500/10 p-3 rounded-xl border border-amber-500/20">
+                                    <i class="ph ph-warning-circle text-amber-500 text-lg shrink-0"></i>
+                                    <p>Mohon jangan bagikan kode rahasia ini kepada siapapun demi keamanan akses produk Anda.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NOTIFICATION TEMPLATES VIEW -->
+                <div id="content-templates" class="content-section hidden space-y-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <h3 class="text-2xl font-black text-slate-800 dark:text-white">Notification Templates</h3>
+                            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Kelola template pesan dinamis untuk Email dan WhatsApp.</p>
+                        </div>
+                    </div>
+                    <div class="glass rounded-2xl overflow-hidden shadow-xl">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                                <thead class="bg-white/40 dark:bg-slate-800/40 text-slate-800 dark:text-slate-200 border-b border-white/50 dark:border-slate-700/50">
+                                    <tr>
+                                        <th class="px-6 py-4 font-bold">Event Type</th>
+                                        <th class="px-6 py-4 font-bold">Email Subject</th>
+                                        <th class="px-6 py-4 font-bold text-center">Email Status</th>
+                                        <th class="px-6 py-4 font-bold text-center">WA Status</th>
+                                        <th class="px-6 py-4 font-bold text-right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="templatesTableBody" class="divide-y divide-white/20 dark:divide-slate-700/50">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PROFILE (CHANGE PASSWORD) VIEW -->
+                <div id="content-profile" class="content-section hidden space-y-6">
+                    <div class="mb-4">
+                        <h3 class="text-2xl font-black text-slate-800 dark:text-white">My Profile</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Kelola informasi akun dan keamanan Anda di sini.</p>
+                    </div>
+                    <div class="glass rounded-3xl shadow-xl p-8 border border-white/40 dark:border-slate-700/50 max-w-xl">
+                        <h4 class="font-black text-slate-800 dark:text-white mb-6 text-lg border-b border-white/30 dark:border-slate-700/50 pb-3 flex items-center gap-2">
+                            <i class="ph ph-lock-key text-brand"></i> Ganti Password
+                        </h4>
+                        <form id="changePasswordForm" class="space-y-5">
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Password Saat Ini</label>
+                                <input type="password" id="cpOldPass" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Password Baru</label>
+                                <input type="password" id="cpNewPass" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Konfirmasi Password Baru</label>
+                                <input type="password" id="cpConfirmPass" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium" required>
+                            </div>
+                            <div class="pt-4">
+                                <button type="submit" id="cpBtn" class="bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-brand/30 flex items-center gap-2">
+                                    <i class="ph ph-floppy-disk text-xl"></i> Simpan Password
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- USERS DIRECTORY VIEW -->
+                <div id="content-users" class="content-section hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
+                        <div>
+                            <h3 class="text-2xl font-black text-slate-800 dark:text-white">Users Directory</h3>
+                            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Kelola data member, admin, dan agency.</p>
+                        </div>
+                        <button onclick="openUserModal()" id="btnAddUser" class="bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 shadow-lg shadow-brand/30 text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all">
+                            <i class="ph ph-user-plus text-xl"></i> Tambah User
+                        </button>
+                    </div>
+                    <div class="glass rounded-2xl overflow-hidden shadow-xl">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                                <thead class="bg-white/40 dark:bg-slate-800/40 text-slate-800 dark:text-slate-200 border-b border-white/50 dark:border-slate-700/50">
+                                    <tr>
+                                        <th class="px-6 py-4 font-bold">Nama & Email</th>
+                                        <th class="px-6 py-4 font-bold">WhatsApp</th>
+                                        <th class="px-6 py-4 font-bold">Role</th>
+                                        <th class="px-6 py-4 font-bold">Kode Affiliate</th>
+                                        <th class="px-6 py-4 font-bold text-right">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody" class="divide-y divide-white/20 dark:divide-slate-700/50">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AFFILIATE SYSTEM VIEW -->
+                <div id="content-affiliate" class="content-section hidden space-y-6">
+                    <div class="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h3 class="text-2xl font-black text-slate-800 dark:text-white">Affiliate Dashboard</h3>
+                            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Pilih produk dan bagikan link affiliate Anda (Kode Ref: <span id="affiliateRefCode" class="font-bold text-brand uppercase"></span>).</p>
+                        </div>
+                    </div>
+
+                    <!-- Affiliate Stats -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+                        <div class="glass rounded-2xl p-6 border border-emerald-500/30 bg-emerald-500/5 flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-bold text-slate-600 dark:text-slate-400 mb-1">Total Penjualan Referral</p>
+                                <h3 class="text-2xl font-black text-slate-800 dark:text-white" id="affTotalSales">0</h3>
+                            </div>
+                            <div class="w-14 h-14 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-600">
+                                <i class="ph ph-users text-2xl"></i>
+                            </div>
+                        </div>
+                        <div class="glass rounded-2xl p-6 border border-orange-500/30 bg-orange-500/5 flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-bold text-slate-600 dark:text-slate-400 mb-1">Total Komisi Terkumpul</p>
+                                <h3 class="text-2xl font-black text-orange-600 dark:text-orange-400" id="affTotalCommission">Rp 0</h3>
+                            </div>
+                            <div class="w-14 h-14 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-600">
+                                <i class="ph ph-wallet text-2xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payout Settings -->
+                    <div class="glass rounded-2xl p-6 border border-white/40 dark:border-slate-700/50 mb-6">
+                        <h4 class="font-black text-slate-800 dark:text-white mb-4 text-lg flex items-center gap-2"><i class="ph ph-bank text-brand"></i> Rekening Pencairan Komisi</h4>
+                        <form id="affiliateBankForm" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <input type="text" id="affBankName" placeholder="Nama Bank (Cth: BCA)" class="w-full px-4 py-2 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm focus:border-brand dark:text-white" required>
+                            <input type="number" id="affBankNo" placeholder="Nomor Rekening" class="w-full px-4 py-2 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm focus:border-brand dark:text-white" required>
+                            <div class="flex gap-2">
+                                <input type="text" id="affBankOwner" placeholder="Atas Nama" class="flex-1 px-4 py-2 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm focus:border-brand dark:text-white" required>
+                                <button type="button" onclick="saveUserBank(event)" class="bg-brand hover:bg-brandHover text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md shadow-brand/30"><i class="ph ph-check"></i></button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Products Link -->
+                    <h4 class="font-black text-slate-800 dark:text-white mb-2 text-lg">Katalog Produk Affiliate</h4>
+                    <div id="affiliateProductsList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    </div>
+                </div>
+
+                <!-- COUPONS VIEW -->
+                <div id="content-coupons" class="content-section hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
+                        <div>
+                            <h3 class="text-2xl font-black text-slate-800 dark:text-white">Master Kupon</h3>
+                            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Buat kode diskon untuk promosi atau base affiliate Anda.</p>
+                        </div>
+                        <button onclick="openCouponModal()" class="bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 shadow-lg shadow-brand/30 text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all">
+                            <i class="ph ph-plus-circle text-xl"></i> Tambah Kupon
+                        </button>
+                    </div>
+                    <div class="glass rounded-2xl overflow-hidden shadow-xl">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                                <thead class="bg-white/40 dark:bg-slate-800/40 text-slate-800 dark:text-slate-200 border-b border-white/50 dark:border-slate-700/50">
+                                    <tr>
+                                        <th class="px-6 py-4 font-bold">Kode Kupon</th>
+                                        <th class="px-6 py-4 font-bold">Tipe Diskon</th>
+                                        <th class="px-6 py-4 font-bold">Nilai</th>
+                                        <th class="px-6 py-4 font-bold">Berlaku Untuk</th>
+                                        <th class="px-6 py-4 font-bold text-right">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="couponsTableBody" class="divide-y divide-white/20 dark:divide-slate-700/50">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BROADCAST VIEW -->
+                <div id="content-broadcast" class="content-section hidden space-y-6 max-w-4xl">
+                    <div class="mb-4">
+                        <h3 class="text-2xl font-black text-slate-800 dark:text-white">Broadcast System</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Kirim pesan massal ke Users via WhatsApp API Gateway.</p>
+                    </div>
+                    <div class="glass rounded-3xl shadow-xl p-8 border border-white/40 dark:border-slate-700/50">
+                        <form id="broadcastForm" class="space-y-6" onsubmit="prepareBroadcast(); simulateBroadcast(event)">
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Target Audience</label>
+                                <!-- Hidden input agar app.js tetap bisa membaca id="bcTarget" tanpa diubah -->
+                                <input type="hidden" id="bcTarget" value="all">
+                                
+                                <select id="bcTargetSelect" onchange="toggleCustomNumbers()" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium">
+                                    <option value="all">Semua Users</option>
+                                    <option value="affiliates">Hanya Affiliates</option>
+                                    <option value="pending">Users Order Pending (Reminder)</option>
+                                    <option value="custom">Nomor WA Custom (Manual)</option>
+                                </select>
+                                
+                                <!-- Box Textarea untuk input nomor manual (Muncul otomatis kalau pilih Custom) -->
+                                <textarea id="bcCustomNumbers" rows="2" placeholder="Masukkan nomor WA (pisahkan dengan koma), cth: 081234, 628567..." class="mt-3 w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white text-sm hidden"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center justify-between">
+                                    <span>Pesan WhatsApp</span>
+                                    <span class="text-xs font-medium text-slate-500 bg-white/50 dark:bg-slate-800/50 px-2 py-1 rounded">Variabel: {nama}, {produk}, {link}</span>
+                                </label>
+                                <textarea id="bcMessage" rows="6" placeholder="Halo {nama}, promo spesial untuk Anda hari ini..." class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white text-sm" required></textarea>
+                            </div>
+                            <div class="pt-2">
+                                <button type="submit" class="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-cyan-500/30 flex items-center gap-2">
+                                    <i class="ph ph-paper-plane-tilt text-xl"></i> Kirim Broadcast Sekarang
+                                </button>
+                                <p class="text-xs text-slate-500 mt-3"><i class="ph ph-info"></i> Pastikan WhatsApp Gateway Anda sudah diatur di Admin Settings.</p>
+                            </div>
+                        </form>
+
+                        <!-- Trik Script Mini untuk bypass tanpa harus edit app.js -->
+                        <script>
+                            function toggleCustomNumbers() {
+                                const val = document.getElementById('bcTargetSelect').value;
+                                const customArea = document.getElementById('bcCustomNumbers');
+                                if (val === 'custom') {
+                                    customArea.classList.remove('hidden');
+                                    customArea.setAttribute('required', 'true');
+                                } else {
+                                    customArea.classList.add('hidden');
+                                    customArea.removeAttribute('required');
+                                }
+                            }
+                            function prepareBroadcast() {
+                                const sel = document.getElementById('bcTargetSelect').value;
+                                const realTarget = document.getElementById('bcTarget');
+                                if (sel === 'custom') {
+                                    realTarget.value = 'CUSTOM:' + document.getElementById('bcCustomNumbers').value;
+                                } else {
+                                    realTarget.value = sel;
+                                }
+                            }
+                        </script>
+                    </div>
+                </div>
+
+                <!-- SETTINGS VIEW -->
+                <div id="content-settings" class="content-section hidden space-y-8 max-w-4xl">
+                    <div class="glass rounded-3xl shadow-xl p-8 border border-white/40 dark:border-slate-700/50">
+                        <h3 class="text-xl font-black text-slate-800 dark:text-white mb-6 border-b border-white/40 dark:border-slate-700/50 pb-4">Admin Settings</h3>
+                        <div class="space-y-8">
+                            <!-- Basic White Label -->
+                            <div>
+                                <h4 class="font-black text-slate-800 dark:text-white mb-4 text-lg">Branding</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Logo URL / Upload</label>
+                                        <div class="flex items-center gap-3 mb-3">
+                                            <input type="url" id="settingLogoUrl" placeholder="https://example.com/logo.png" class="flex-1 px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white">
+                                        </div>
+                                        <div class="flex items-center gap-3">
+                                            <input type="file" id="settingLogoFile" accept="image/*" class="w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-brand/10 file:text-brand hover:file:bg-brand/20 transition-all cursor-pointer">
+                                        </div>
+                                    </div>
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Platform Name</label>
+                                            <input type="text" id="settingAppName" value="iMersFireship" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Primary Color (Hex)</label>
+                                            <div class="flex items-center gap-3">
+                                                <input type="color" id="settingColor" value="#4f46e5" class="w-12 h-12 rounded-xl cursor-pointer border-0 p-1 bg-white/50 dark:bg-slate-900/50 shadow-sm">
+                                                <input type="text" id="settingColorText" value="#4f46e5" class="flex-1 px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-mono font-medium" readonly>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Live Chat Widget Settings -->
+                            <div class="pt-6 border-t border-white/40 dark:border-slate-700/50">
+                                <h4 class="font-black text-slate-800 dark:text-white mb-4 text-lg">Live Chat Widget</h4>
+                                <p class="text-sm text-slate-500 dark:text-slate-400 mb-5">Tampilkan tombol WhatsApp melayang di pojok layar untuk pengunjung website.</p>
+                                <div class="glass rounded-2xl p-5 border border-white/40 dark:border-slate-700/50 bg-white/30 dark:bg-slate-800/30">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <label class="font-bold text-slate-700 dark:text-slate-300">Aktifkan WA Melayang</label>
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" id="settingWaFloatingActive" class="sr-only peer">
+                                            <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-green-500"></div>
+                                        </label>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Nomor WA CS / Admin</label>
+                                        <input type="text" id="settingWaFloatingNum" placeholder="Contoh: 08123456789" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- WA Gateway / Notification Settings -->
+                            <div class="pt-6 border-t border-white/40 dark:border-slate-700/50">
+                                <h4 class="font-black text-slate-800 dark:text-white mb-4 text-lg">WhatsApp API Gateway</h4>
+                                <p class="text-sm text-slate-500 dark:text-slate-400 mb-5">Atur API WA untuk otomatis mengirim tagihan dan akses produk ke kustomer.</p>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-5">
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Provider</label>
+                                        <select id="notifWaProvider" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium">
+                                            <option value="fonnte">Fonnte</option>
+                                            <option value="starsender">StarSender</option>
+                                            <option value="xsender">Xsender</option>
+                                            <option value="custom">Custom API</option>
+                                        </select>
+                                    </div>
+                                    <div class="sm:col-span-2">
+                                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">API Token / Key</label>
+                                        <input type="password" id="notifWaToken" placeholder="Masukkan Token Fonnte / StarSender / Xsender Anda" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Nomor WA Admin <span class="text-slate-400 font-normal">(Untuk Notif Order Baru)</span></label>
+                                    <input type="text" id="notifAdminWa" placeholder="Contoh: 08123456789" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium">
+                                </div>
+                            </div>
+                            
+                            <!-- Email API Gateway Settings -->
+                            <div class="pt-6 border-t border-white/40 dark:border-slate-700/50">
+                                <h4 class="font-black text-slate-800 dark:text-white mb-4 text-lg">Email API Gateway</h4>
+                                <p class="text-sm text-slate-500 dark:text-slate-400 mb-5">Atur pengiriman email menggunakan layanan pihak ke-3. Kosongkan untuk pakai bawaan Google.</p>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-5">
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Provider Email</label>
+                                        <select id="notifEmailProvider" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium">
+                                            <option value="google">Default (Google MailApp)</option>
+                                            <option value="mailketing">Mailketing</option>
+                                            <option value="jowmail">Jowmail</option>
+                                        </select>
+                                    </div>
+                                    <div class="sm:col-span-2">
+                                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">API Bearer Token</label>
+                                        <input type="password" id="notifEmailToken" placeholder="Masukkan API Token Pihak Ke-3 Anda" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Telegram Bot Settings -->
+                            <div class="pt-6 border-t border-white/40 dark:border-slate-700/50">
+                                <h4 class="font-black text-slate-800 dark:text-white mb-4 text-lg">Telegram Bot Notification</h4>
+                                <p class="text-sm text-slate-500 dark:text-slate-400 mb-5">Atur pengiriman notifikasi order baru via Telegram Bot.</p>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Bot Token</label>
+                                        <input type="password" id="notifTelegramToken" placeholder="Masukkan Bot Token dari BotFather" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Admin Chat ID</label>
+                                        <input type="text" id="notifTelegramChatId" placeholder="Masukkan ID Chat Telegram Admin" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Payment Methods -->
+                            <div class="pt-6 border-t border-white/40 dark:border-slate-700/50">
+                                <h4 class="font-black text-slate-800 dark:text-white mb-4 text-lg">Payment Methods</h4>
+                                <div class="mb-5 bg-white/30 dark:bg-slate-800/30 p-5 rounded-2xl border border-white/40 dark:border-slate-700/50">
+                                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-3">Manual Bank Transfer</label>
+                                    <div id="bankList" class="space-y-3 mb-4">
+                                        <!-- Bank inputs injected here -->
+                                    </div>
+                                    <button onclick="addBankField()" class="text-xs bg-brand/10 hover:bg-brand/20 text-brand font-black px-4 py-2 rounded-lg shadow-sm transition-colors flex items-center gap-1"><i class="ph ph-plus-circle text-lg"></i> Add Bank</button>
+                                </div>
+                            </div>
+
+                            <div class="pt-6 border-t border-white/40 dark:border-slate-700/50">
+                                <button onclick="saveSettings()" class="bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-brand/30 w-full sm:w-auto">
+                                    Save Changes
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ==========================================
+         MODALS & OVERLAYS
+         ========================================== -->
+         
+    <!-- Product Form Modal -->
+    <div id="productModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 hidden flex justify-center items-center p-4">
+        <div class="glass rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col border border-white/20">
+            <div class="p-6 border-b border-white/20 dark:border-slate-700/50 flex justify-between items-center bg-white/40 dark:bg-slate-800/40">
+                <h3 class="text-xl font-black text-slate-800 dark:text-white" id="productModalTitle">Add/Edit Product</h3>
+                <button onclick="closeProductModal()" class="text-slate-500 hover:text-red-500 bg-white/50 dark:bg-slate-700/50 p-2 rounded-full transition-colors"><i class="ph ph-x text-xl"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1">
+                <form id="productForm" class="space-y-5">
+                    <input type="hidden" id="prodId">
+                    
+                    <div id="checkoutLinkContainer" class="hidden mb-4 p-5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div class="flex-1 w-full overflow-hidden">
+                            <p class="text-xs font-black text-emerald-600 dark:text-emerald-400 mb-2 uppercase tracking-wider">Affiliate Checkout Link</p>
+                            <input type="text" id="prodCheckoutUrl" readonly class="w-full bg-white/50 dark:bg-slate-900/50 border border-emerald-500/30 rounded-lg text-sm text-emerald-700 dark:text-emerald-300 font-mono p-3 outline-none" value="">
+                        </div>
+                        <button type="button" onclick="copyCheckoutLink()" class="bg-gradient-to-r from-emerald-500 to-green-600 text-white px-5 py-3 rounded-xl shadow-lg shadow-green-500/30 flex items-center gap-2 text-sm font-bold transition-all w-full sm:w-auto justify-center mt-6 sm:mt-0">
+                            <i class="ph ph-copy text-xl"></i> Copy Link
+                        </button>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Gambar Produk (URL / Upload)</label>
+                        <div class="flex items-center gap-3 mb-3">
+                            <input type="url" id="prodImageUrl" placeholder="https://example.com/image.png" class="flex-1 px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm">
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <input type="file" id="prodImageFile" accept="image/*" class="w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-brand/10 file:text-brand hover:file:bg-brand/20 transition-all cursor-pointer">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Title</label>
+                            <input type="text" id="prodTitle" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Price (Rp)</label>
+                            <input type="number" id="prodPrice" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Type</label>
+                        <select id="prodType" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white" onchange="toggleProductFields()">
+                            <option value="download">Digital Download / General</option>
+                            <option value="lms">LMS / Course</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Short Description</label>
+                        <textarea id="prodDesc" rows="2" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white"></textarea>
+                    </div>
+                    
+                    <!-- NEW: Salespage URL -->
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Salespage URL (Eksternal Landing Page)</label>
+                        <input type="url" id="prodSalesPage" placeholder="https://domainkamu.com/promo" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm">
+                        <p class="text-[10px] text-slate-500 mt-1">Kosongkan jika ingin user langsung diarahkan ke halaman Checkout.</p>
+                    </div>
+
+                    <!-- NEW: Internal Salespage HTML -->
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Internal Salespage (HTML Custom)</label>
+                        <textarea id="prodSalesPageHtml" rows="4" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm font-mono leading-relaxed" placeholder="<h1>Ketik landing page HTML kustom kamu di sini...</h1>\n<p>Keuntungannya...</p>"></textarea>
+                        <p class="text-[10px] text-slate-500 mt-1">Gunakan ini jika kamu tidak punya URL Landing Page Eksternal.</p>
+                    </div>
+
+                    <!-- NEW: Affiliate Commission Settings -->
+                    <div class="border border-white/40 dark:border-slate-700/50 rounded-2xl p-5 bg-white/30 dark:bg-slate-800/30">
+                        <h4 class="font-black text-slate-800 dark:text-white mb-3 text-sm flex items-center gap-2"><i class="ph ph-money text-green-500 text-lg"></i> Komisi Affiliate</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Tipe Komisi</label>
+                                <select id="prodCommType" class="w-full px-3 py-2 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm">
+                                    <option value="percent">Persentase (%)</option>
+                                    <option value="fixed">Nominal (Rp)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nilai Komisi</label>
+                                <input type="number" id="prodCommValue" placeholder="0" class="w-full px-3 py-2 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Field: Download -->
+                    <div id="fieldDownload" class="border border-white/40 dark:border-slate-700/50 rounded-2xl p-5 bg-white/30 dark:bg-slate-800/30">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <label class="block text-sm font-black text-slate-800 dark:text-white">File Downloads</label>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Masukkan link file GDrive / Mediafire / dll.</p>
+                            </div>
+                            <button type="button" onclick="addDownloadField()" class="text-xs bg-brand/10 hover:bg-brand/20 text-brand font-black px-4 py-2 rounded-lg shadow-sm flex items-center gap-1 transition-colors"><i class="ph ph-plus text-lg"></i> Add Link</button>
+                        </div>
+                        <div id="downloadsContainer" class="space-y-3"></div>
+                    </div>
+
+                    <!-- Dynamic Field: LMS -->
+                    <div id="fieldLMS" class="hidden border border-white/40 dark:border-slate-700/50 rounded-2xl p-5 bg-white/30 dark:bg-slate-800/30">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <label class="block text-sm font-black text-slate-800 dark:text-white">Video Lessons</label>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Masukkan link YouTube materi Anda.</p>
+                            </div>
+                            <button type="button" onclick="addLessonField()" class="text-xs bg-brand/10 hover:bg-brand/20 text-brand font-black px-4 py-2 rounded-lg shadow-sm flex items-center gap-1 transition-colors"><i class="ph ph-plus text-lg"></i> Add Video</button>
+                        </div>
+                        <div id="lessonsContainer" class="space-y-3"></div>
+                    </div>
+
+                    <!-- Unified Access HTML Field (Optional) -->
+                    <div id="fieldAccess">
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300">Additional Info / Notes <span class="text-slate-400 dark:text-slate-500 font-medium">(Optional)</span></label>
+                        </div>
+                        <textarea id="prodAccess" rows="3" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm leading-relaxed" placeholder="Catatan tambahan (mendukung tag HTML dasar jika dibutuhkan)..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="p-6 border-t border-white/20 dark:border-slate-700/50 bg-white/40 dark:bg-slate-800/40 flex justify-end gap-3">
+                <button onclick="closeProductModal()" class="px-6 py-3 text-slate-600 dark:text-slate-300 font-bold hover:bg-white/50 dark:hover:bg-slate-700/50 rounded-xl transition-colors">Cancel</button>
+                <button onclick="saveProduct()" class="bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-brand/30">Save Product</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Form Modal -->
+    <div id="userModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 hidden flex justify-center items-center p-4">
+        <div class="glass rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col border border-white/20">
+            <div class="p-6 border-b border-white/20 dark:border-slate-700/50 flex justify-between items-center bg-white/40 dark:bg-slate-800/40">
+                <h3 class="text-xl font-black text-slate-800 dark:text-white" id="userModalTitle">Tambah User Baru</h3>
+                <button onclick="closeUserModal()" class="text-slate-500 hover:text-red-500 bg-white/50 dark:bg-slate-700/50 p-2 rounded-full transition-colors"><i class="ph ph-x text-xl"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <form id="userForm" class="space-y-4">
+                    <input type="hidden" id="userId">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Lengkap</label>
+                        <input type="text" id="userName" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Email</label>
+                        <input type="email" id="userEmail" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">No WhatsApp</label>
+                        <input type="text" id="userWa" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Role</label>
+                        <select id="userRole" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium">
+                            <option value="user">User (Member)</option>
+                            <option value="agency">Agency</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div id="userPasswordContainer">
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Password</label>
+                        <input type="password" id="userPassword" placeholder="Kosongkan jika tidak ingin mengubah" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium">
+                    </div>
+                </form>
+            </div>
+            <div class="p-6 border-t border-white/20 dark:border-slate-700/50 bg-white/40 dark:bg-slate-800/40 flex justify-end gap-3">
+                <button onclick="closeUserModal()" class="px-6 py-3 text-slate-600 dark:text-slate-300 font-bold hover:bg-white/50 dark:hover:bg-slate-700/50 rounded-xl transition-colors">Batal</button>
+                <button onclick="saveUser()" class="bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-brand/30">Simpan User</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template Form Modal -->
+    <div id="templateModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 hidden flex justify-center items-center p-4">
+        <div class="glass rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col border border-white/20">
+            <div class="p-6 border-b border-white/20 dark:border-slate-700/50 flex justify-between items-center bg-white/40 dark:bg-slate-800/40">
+                <h3 class="text-xl font-black text-slate-800 dark:text-white">Edit Notification Template</h3>
+                <button onclick="closeTemplateModal()" class="text-slate-500 hover:text-red-500 bg-white/50 dark:bg-slate-700/50 p-2 rounded-full transition-colors"><i class="ph ph-x text-xl"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1 space-y-6">
+                <div class="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 flex flex-col gap-2">
+                    <p class="text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider"><i class="ph ph-info"></i> Variabel Dinamis yang Bisa Digunakan:</p>
+                    <p class="text-sm font-mono text-slate-600 dark:text-slate-300">{nama}, {email}, {wa}, {produk}, {total}, {metode}, {status}, {password}, {komisi}</p>
+                </div>
+                <form id="templateForm" class="space-y-5">
+                    <input type="hidden" id="tmplId">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Event Type</label>
+                            <input type="text" id="tmplType" readonly class="w-full px-4 py-3 bg-slate-100/50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-slate-500 font-mono font-bold cursor-not-allowed">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Template Title</label>
+                            <input type="text" id="tmplTitle" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white" required>
+                        </div>
+                    </div>
+                    <!-- Email Section -->
+                    <div class="border border-white/40 dark:border-slate-700/50 rounded-2xl p-5 bg-white/30 dark:bg-slate-800/30">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="font-black text-slate-800 dark:text-white flex items-center gap-2"><i class="ph ph-envelope-simple text-xl text-rose-500"></i> Email Template</h4>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <span class="text-xs font-bold text-slate-500 dark:text-slate-400">Aktifkan Email</span>
+                                <input type="checkbox" id="tmplActiveEmail" class="accent-brand w-4 h-4">
+                            </label>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Email Subject</label>
+                                <input type="text" id="tmplSubject" class="w-full px-4 py-2 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Email Body (Mendukung HTML)</label>
+                                <textarea id="tmplEmailBody" rows="4" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm leading-relaxed"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- WA Section -->
+                    <div class="border border-white/40 dark:border-slate-700/50 rounded-2xl p-5 bg-white/30 dark:bg-slate-800/30">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="font-black text-slate-800 dark:text-white flex items-center gap-2"><i class="ph ph-whatsapp-logo text-xl text-green-500"></i> WhatsApp Template</h4>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <span class="text-xs font-bold text-slate-500 dark:text-slate-400">Aktifkan WA</span>
+                                <input type="checkbox" id="tmplActiveWA" class="accent-brand w-4 h-4">
+                            </label>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Pesan WA (Gunakan * untuk tebal, _ untuk miring)</label>
+                            <textarea id="tmplWABody" rows="4" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm leading-relaxed"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="p-6 border-t border-white/20 dark:border-slate-700/50 bg-white/40 dark:bg-slate-800/40 flex justify-end gap-3">
+                <button onclick="closeTemplateModal()" class="px-6 py-3 text-slate-600 dark:text-slate-300 font-bold hover:bg-white/50 dark:hover:bg-slate-700/50 rounded-xl transition-colors">Batal</button>
+                <button onclick="saveTemplate()" class="bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-brand/30">Simpan Template</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Salespage Viewer Modal -->
+    <div id="salesPageModal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-xl z-[70] hidden flex justify-center items-start p-0 sm:p-4 overflow-y-auto">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-4xl min-h-screen sm:min-h-[90vh] sm:rounded-3xl shadow-2xl flex flex-col relative mt-0 sm:mt-10">
+            <button onclick="closeSalesPageModal()" class="absolute top-4 right-4 bg-black/50 hover:bg-red-500 text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors z-50 backdrop-blur-md">
+                <i class="ph ph-x text-xl"></i>
+            </button>
+            <div id="spModalContent" class="flex-1 p-6 md:p-12 prose dark:prose-invert max-w-none overflow-hidden break-words text-slate-800 dark:text-slate-200">
+                <!-- HTML Content Here -->
+            </div>
+            <div class="sticky bottom-0 p-4 border-t border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex justify-center shadow-[0_-10px_20px_rgba(0,0,0,0.05)] rounded-b-3xl">
+                <a href="#" id="spModalBuyBtn" class="bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 text-white px-10 py-4 rounded-2xl font-black transition-all shadow-xl shadow-brand/30 text-lg flex items-center gap-3 w-full sm:w-auto justify-center">
+                    Beli Sekarang <i class="ph ph-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating WA Button (Live Chat) -->
+    <a href="#" id="floatingWaBtn" target="_blank" class="hidden fixed bottom-6 left-6 bg-green-500 hover:bg-green-600 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-transform hover:scale-110 z-[55]">
+        <i class="ph ph-whatsapp-logo text-3xl"></i>
+    </a>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-6 right-6 glass text-slate-800 dark:text-white px-5 py-4 rounded-2xl shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 z-[60] flex items-center gap-3 border-l-4 border-l-green-500">
+        <i id="toastIcon" class="ph ph-check-circle text-green-500 text-2xl drop-shadow-sm"></i>
+        <span id="toastMsg" class="text-sm font-bold">Notification message</span>
+    </div>
+
+    <!-- Trik Script Live Chat (Tanpa Edit app.js) -->
+    <script>
+        // Ini akan dijalankan tiap kali file dimuat, 
+        // fungsinya menarik setting yang tersimpan & mengatur tombol
+        document.addEventListener('DOMContentLoaded', () => {
+            // Karena settingnya akan diikat di atribut HTML oleh app.js nanti
+            // (Atau kita biarkan app.js nanti yang akan melakukan bind)
+            // Tapi untuk amannya kita letakkan di sini agar tombol bisa di-klik.
+            const waBtn = document.getElementById('floatingWaBtn');
+            const floatingCheckbox = document.getElementById('settingWaFloatingActive');
+            const floatingNum = document.getElementById('settingWaFloatingNum');
+
+            // Kita bind fungsi onChange agar langsung simpan ke localStorage sementara
+            // sebelum digabungkan dengan fungsi saveSettings bawaan.
+            if(floatingCheckbox && floatingNum) {
+                // Memuat state dari localStorage
+                const savedNum = localStorage.getItem('im_wa_num') || '';
+                const isActive = localStorage.getItem('im_wa_active') === 'true';
+                
+                floatingNum.value = savedNum;
+                floatingCheckbox.checked = isActive;
+
+                if(isActive && savedNum) {
+                    let cleanWa = String(savedNum).replace(/\D/g, '');
+                    if (cleanWa.startsWith('0')) cleanWa = '62' + cleanWa.substring(1);
+                    
+                    waBtn.href = `https://wa.me/${cleanWa}?text=Halo%20Admin,%20saya%20ingin%20bertanya...`;
+                    waBtn.classList.remove('hidden');
+                }
+
+                // Listener ketika tombol disave
+                const originalSave = window.saveSettings;
+                if(originalSave) {
+                    window.saveSettings = async function() {
+                        localStorage.setItem('im_wa_num', document.getElementById('settingWaFloatingNum').value);
+                        localStorage.setItem('im_wa_active', document.getElementById('settingWaFloatingActive').checked);
+                        
+                        const isNowActive = document.getElementById('settingWaFloatingActive').checked;
+                        const numNow = document.getElementById('settingWaFloatingNum').value;
+                        
+                        if(isNowActive && numNow) {
+                            let cleanWa = String(numNow).replace(/\D/g, '');
+                            if (cleanWa.startsWith('0')) cleanWa = '62' + cleanWa.substring(1);
+                            
+                            waBtn.href = `https://wa.me/${cleanWa}?text=Halo%20Admin,%20saya%20ingin%20bertanya...`;
+                            waBtn.classList.remove('hidden');
+                        } else {
+                            waBtn.classList.add('hidden');
+                        }
+                        
+                        // Jalankan fungsi aslinya
+                        return originalSave.apply(this, arguments);
+                    };
+                }
+            }
+        });
+    </script>
+
+    <!-- Panggil File Javascript Eksternal -->
+    <script src="app.js"></script>
+
+</body>
+</html>
