@@ -7,11 +7,20 @@ async function apiCall(action, payload = null) {
     }
     
     let url = `${SCRIPT_URL}?action=${action}`;
-    let options = { method: 'GET', mode: 'cors', redirect: 'follow' };
+    
+    // Konfigurasi fetch standar untuk Google Apps Script
+    // redirect: 'follow' wajib karena Google selalu melakukan redirect internal
+    let options = { 
+        method: 'GET', 
+        redirect: 'follow' 
+    };
+
     if (payload) {
         options.method = 'POST';
-        options.body = JSON.stringify(payload);
+        // KUNCI PERBAIKAN: Gunakan text/plain untuk membungkus JSON.
+        // Ini trik supaya browser tidak mengirim request OPTIONS (Preflight) yang sering ditolak Google.
         options.headers = { 'Content-Type': 'text/plain;charset=utf-8' };
+        options.body = JSON.stringify(payload);
     }
 
     try {
@@ -26,8 +35,9 @@ async function apiCall(action, payload = null) {
         try {
             data = JSON.parse(text); 
         } catch(e) {
-            console.error("Respon bukan JSON:", text);
-            throw new Error("Gagal konek ke DB! Pastikan URL Apps Script sudah di-Deploy (Anyone).");
+            // Jika error di sini, artinya Google Apps Script mengirim halaman HTML Error (Crash di sisi server).
+            console.error("Respon bukan JSON (Kemungkinan GAS Error):", text);
+            throw new Error("Gagal konek ke DB! Pastikan URL Apps Script sudah di-Deploy (Anyone) & Izin Akses diberikan.");
         }
         
         if (!data.success) throw new Error(data.error || "Terjadi kesalahan pada server");
@@ -383,62 +393,62 @@ async function loadAllData() {
 }
 
 /**
- * =========================================================================
- * SETTINGS & LIVE CHAT UI BINDING (FIXED PERSISTENCE)
- * =========================================================================
- */
+ * =========================================================================
+ * SETTINGS & LIVE CHAT UI BINDING (FIXED PERSISTENCE)
+ * =========================================================================
+ */
 function applySettingsUI() {
-    const set = window.appState.settings;
-    if(set.primaryColor) {
-        document.documentElement.style.setProperty('--brand-color', set.primaryColor);
-        document.documentElement.style.setProperty('--brand-hover', set.primaryColor);
-    }
-    if(set.appName) {
-        document.querySelectorAll('.app-name-display').forEach(el => el.innerText = set.appName);
-    }
-    applyLogo(set.logoUrl);
-    
-    const settingAppNameEl = document.getElementById('settingAppName');
-    if (settingAppNameEl) settingAppNameEl.value = set.appName || 'iMersFireship';
-    
-    const settingColorEl = document.getElementById('settingColor');
-    if (settingColorEl) settingColorEl.value = set.primaryColor || '#4f46e5';
-    
-    const settingColorTextEl = document.getElementById('settingColorText');
-    if (settingColorTextEl) settingColorTextEl.value = set.primaryColor || '#4f46e5';
-    
-    const settingLogoUrlEl = document.getElementById('settingLogoUrl');
-    if (settingLogoUrlEl) settingLogoUrlEl.value = set.logoUrl || '';
+    const set = window.appState.settings;
+    if(set.primaryColor) {
+        document.documentElement.style.setProperty('--brand-color', set.primaryColor);
+        document.documentElement.style.setProperty('--brand-hover', set.primaryColor);
+    }
+    if(set.appName) {
+        document.querySelectorAll('.app-name-display').forEach(el => el.innerText = set.appName);
+    }
+    applyLogo(set.logoUrl);
+    
+    const settingAppNameEl = document.getElementById('settingAppName');
+    if (settingAppNameEl) settingAppNameEl.value = set.appName || 'iMersFireship';
+    
+    const settingColorEl = document.getElementById('settingColor');
+    if (settingColorEl) settingColorEl.value = set.primaryColor || '#4f46e5';
+    
+    const settingColorTextEl = document.getElementById('settingColorText');
+    if (settingColorTextEl) settingColorTextEl.value = set.primaryColor || '#4f46e5';
+    
+    const settingLogoUrlEl = document.getElementById('settingLogoUrl');
+    if (settingLogoUrlEl) settingLogoUrlEl.value = set.logoUrl || '';
 
-    if (set.notifications) {
-        const notifWaProviderEl = document.getElementById('notifWaProvider');
-        if (notifWaProviderEl) notifWaProviderEl.value = set.notifications.waProvider || 'fonnte';
-        
-        const notifWaTokenEl = document.getElementById('notifWaToken');
-        if (notifWaTokenEl) notifWaTokenEl.value = set.notifications.waToken || '';
-        
-        const notifAdminWaEl = document.getElementById('notifAdminWa');
-        if (notifAdminWaEl) notifAdminWaEl.value = set.notifications.adminWa || '';
-    }
+    if (set.notifications) {
+        const notifWaProviderEl = document.getElementById('notifWaProvider');
+        if (notifWaProviderEl) notifWaProviderEl.value = set.notifications.waProvider || 'fonnte';
+        
+        const notifWaTokenEl = document.getElementById('notifWaToken');
+        if (notifWaTokenEl) notifWaTokenEl.value = set.notifications.waToken || '';
+        
+        const notifAdminWaEl = document.getElementById('notifAdminWa');
+        if (notifAdminWaEl) notifAdminWaEl.value = set.notifications.adminWa || '';
+    }
 
-    // Setup WA Floating Button dari Database (SINKRONISASI DATABASE)
-    const floatingCheckbox = document.getElementById('settingWaFloatingActive');
-    if (floatingCheckbox) floatingCheckbox.checked = (set.waFloatingActive === true || set.waFloatingActive === 'true');
+    // Setup WA Floating Button dari Database (SINKRONISASI DATABASE)
+    const floatingCheckbox = document.getElementById('settingWaFloatingActive');
+    if (floatingCheckbox) floatingCheckbox.checked = (set.waFloatingActive === true || set.waFloatingActive === 'true');
 
-    const floatingNum = document.getElementById('settingWaFloatingNum');
-    if (floatingNum) floatingNum.value = set.waFloatingNum || '';
+    const floatingNum = document.getElementById('settingWaFloatingNum');
+    if (floatingNum) floatingNum.value = set.waFloatingNum || '';
 
-    const waBtn = document.getElementById('floatingWaBtn');
-    if (waBtn) {
-        const isActive = (set.waFloatingActive === true || set.waFloatingActive === 'true');
-        if (isActive && set.waFloatingNum) {
-            let cleanWa = window.formatPhoneNumber(set.waFloatingNum);
-            waBtn.href = `https://wa.me/${cleanWa}?text=Halo%20Admin,%20saya%20ingin%20bertanya%20tentang%20produk%20Anda...`;
-            waBtn.classList.remove('hidden');
-        } else {
-            waBtn.classList.add('hidden');
-        }
-    }
+    const waBtn = document.getElementById('floatingWaBtn');
+    if (waBtn) {
+        const isActive = (set.waFloatingActive === true || set.waFloatingActive === 'true');
+        if (isActive && set.waFloatingNum) {
+            let cleanWa = window.formatPhoneNumber(set.waFloatingNum);
+            waBtn.href = `https://wa.me/${cleanWa}?text=Halo%20Admin,%20saya%20ingin%20bertanya%20tentang%20produk%20Anda...`;
+            waBtn.classList.remove('hidden');
+        } else {
+            waBtn.classList.add('hidden');
+        }
+    }
 }
 
 // --- AUTH LOGIC ---
@@ -848,10 +858,10 @@ window.deleteUser = async (id) => {
 };
 
 /**
- * =========================================================================
- * AFFILIATE SYSTEM LOGIC (DUAL LINKS - INTERNAL FIXED)
- * =========================================================================
- */
+ * =========================================================================
+ * AFFILIATE SYSTEM LOGIC (DUAL LINKS - INTERNAL FIXED)
+ * =========================================================================
+ */
 window.renderAffiliateList = () => {
     const container = document.getElementById('affiliateProductsList');
     const refCodeEl = document.getElementById('affiliateRefCode');
