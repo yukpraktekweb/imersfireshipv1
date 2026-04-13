@@ -3320,7 +3320,113 @@
         };
 
         window.saveSettings = async () => {
+            const name = document.getElementById('settingAppName').value;
+            const color = document.getElementById('settingColor').value;
+            const logoUrlInput = document.getElementById('settingLogoUrl').value;
+            const logoFileInput = document.getElementById('settingLogoFile').files[0];
+            
+            const rawAdminWa = document.getElementById('notifAdminWa').value;
+            const adminWa = window.formatPhoneNumber(rawAdminWa);
+
+            document.documentElement.style.setProperty('--brand-color', color);
+            document.documentElement.style.setProperty('--brand-hover', color); 
+            
+            document.querySelectorAll('.app-name-display').forEach(el => {
+                el.innerText = name || 'iMersFireship';
+            });
+            
+            const settingColorTextEl = document.getElementById('settingColorText');
+            if (settingColorTextEl) settingColorTextEl.value = color;
+
+            const bankItems = document.querySelectorAll('.bank-item');
+            const banks = [];
+            bankItems.forEach(el => {
+                const bname = el.querySelector('.b-name').value;
+                const bno = el.querySelector('.b-no').value;
+                const bowner = el.querySelector('.b-owner').value;
+                if(bname) banks.push({name: bname, no: bno, owner: bowner});
+            });
+
+            let finalLogoUrl = logoUrlInput;
+            if (logoFileInput) {
+                finalLogoUrl = await window.compressImage(logoFileInput, 400);
+            }
+            
+            const payload = {
+                appName: name, primaryColor: color, logoUrl: finalLogoUrl, banks: banks,
+                adminWa: adminWa
+            };
+
             try {
-                const name = document.getElementById('settingAppName')?.value || '';
-                const color = document.getElementById('settingColor')?.value || '#4f46e5';
-                const logoUrlInput = document.getElementById('settingLogo
+                await apiCall('saveSettings', payload);
+                window.applyLogo(finalLogoUrl);
+                showToast("Admin settings saved!");
+                await loadAllData();
+            } catch(e) {
+                showToast(e.message, "error");
+            }
+        };
+
+        window.applyLogo = (src) => {
+            const appLogoSidebar = document.getElementById('appLogoSidebar');
+            if (src) { if(appLogoSidebar) { appLogoSidebar.src = src; appLogoSidebar.classList.remove('hidden'); } }
+            else { if(appLogoSidebar) { appLogoSidebar.src = ''; appLogoSidebar.classList.add('hidden'); } }
+        };
+
+        window.showToast = (m, t='success') => {
+            const el = document.getElementById('toast'), msgEl = document.getElementById('toastMsg');
+            if(!el || !msgEl) return; msgEl.innerText = m;
+            el.classList.remove('hidden', 'translate-y-20', 'opacity-0');
+            setTimeout(() => { el.classList.add('translate-y-20', 'opacity-0'); }, 3000);
+        };
+
+        function updateDashboardStats() {
+            document.getElementById('statProducts').innerText = window.appState.products.length;
+            if (window.appState.user.role === 'admin') {
+                document.getElementById('statUsers').innerText = window.appState.usersData.length;
+                let rev = 0, ord = 0;
+                window.appState.orders.forEach(o => { if (o.status === 'Paid') { rev += Number(o.totalPay || 0); ord++; } });
+                document.getElementById('statRevenue').innerText = window.formatRp(rev);
+                document.getElementById('statOrders').innerText = ord;
+            }
+        }
+
+        function initChart() {
+            setTimeout(() => {
+                const canvas = document.getElementById('salesChart');
+                if(!canvas || window.appState.user.role !== 'admin') return;
+
+                let existingChart = Chart.getChart(canvas);
+                if (existingChart) existingChart.destroy();
+                
+                const isDark = document.documentElement.classList.contains('dark');
+                const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
+                const textColor = isDark ? '#cbd5e1' : '#64748b';
+
+                new Chart(canvas.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: ['Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb'],
+                        datasets: [{
+                            label: 'Revenue',
+                            data: [1200000, 1900000, 3000000, 5000000, 4200000, 6800000, 12450000],
+                            borderColor: getComputedStyle(document.documentElement).getPropertyValue('--brand-color').trim() || '#4f46e5',
+                            backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                            borderWidth: 3, tension: 0.4, fill: true,
+                            pointBackgroundColor: '#ffffff', pointBorderColor: '#4f46e5',
+                            pointBorderWidth: 2, pointRadius: 4, pointHoverRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true, plugins: { legend: { display: false } },
+                        scales: {
+                            y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor } },
+                            x: { grid: { display: false }, ticks: { color: textColor } }
+                        }
+                    }
+                });
+            }, 100);
+        }
+    </script>
+</body>
+</html>
