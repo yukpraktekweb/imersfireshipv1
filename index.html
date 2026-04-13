@@ -2136,8 +2136,8 @@
                 finalImageUrl = await window.compressImage(prodImageFile, 600);
             }
             
-            if (!title || !price) {
-                window.showToast("Judul dan Harga harus diisi", "error");
+            if (!title || document.getElementById('prodPrice').value === '') {
+                window.showToast("Judul dan Harga harus diisi (Ketik angka 0 jika gratis)", "error");
                 return;
             }
 
