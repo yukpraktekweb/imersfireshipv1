@@ -3100,23 +3100,58 @@
     };
 
     window.recalculateCheckout = () => { 
-        const p=window.appState.currentCheckoutProduct, c=window.appState.currentCheckoutCoupon, u=window.appState.currentCheckoutUniqueCode; 
+        const p = window.appState.currentCheckoutProduct;
+        const c = window.appState.currentCheckoutCoupon;
+        const u = window.appState.currentCheckoutUniqueCode; 
+        
         if(!p) return; 
-        document.getElementById('coFee').innerText='- Rp. 113'; 
-        let d=0; 
+
+        // Hitung Diskon
+        let d = 0; 
         if(c){
-            d = c.type === 'percent' ? p.price*(c.value/100) : c.value; 
-            if(d>p.price) d=p.price; 
+            d = c.type === 'percent' ? p.price * (c.value / 100) : c.value; 
+            if(d > p.price) d = p.price; 
+            
             document.getElementById('coDiscountRow').classList.remove('hidden'); 
-            document.getElementById('coDiscountCodeDisplay').innerText=c.code; 
-            document.getElementById('coDiscountAmount').innerText='- '+window.formatRp(d); 
+            document.getElementById('coDiscountCodeDisplay').innerText = c.code; 
+            document.getElementById('coDiscountAmount').innerText = '- ' + window.formatRp(d); 
         } else {
             document.getElementById('coDiscountRow').classList.add('hidden');
         } 
-        const t=p.price-113-d+u; 
-        const ts=String(t).padStart(4,'0'), r=ts.slice(0,-3), l=ts.slice(-3); 
-        document.getElementById('coTotal').innerHTML=`Rp. ${new Intl.NumberFormat('id-ID').format(Number(r))}.<span class="text-red-500">${l}</span>`; 
-        document.getElementById('coTotalPay').innerHTML=document.getElementById('coTotal').innerHTML; 
+        
+        // LOGIKA BARU UNTUK HARGA GRATIS / DISKON 100%
+        let t = 0;
+        let fee = 113; // Default Potongan Fee
+        let uniqueCode = u; // Default Kode Unik
+        
+        // Jika Harga 0 ATAU Total setelah diskon <= 0 (Gratisan)
+        if (p.price === 0 || (p.price - d) <= 0) {
+            fee = 0;          // Nol-kan fee
+            uniqueCode = 0;   // Nol-kan kode unik
+            t = 0;            // Total fix 0
+        } else {
+            // Kalau berbayar, jalankan hitungan normal
+            t = p.price - fee - d + uniqueCode; 
+            if (t <= 0) t = 0;
+        }
+
+        // Tampilkan Fee ke layar
+        document.getElementById('coFee').innerText = fee === 0 ? 'Rp. 0' : `- Rp. ${fee}`;
+
+        // Format Angka Total ke Layar
+        if (t === 0) {
+            document.getElementById('coTotal').innerHTML = `Rp. 0`; 
+            document.getElementById('coTotalPay').innerHTML = `Rp. 0`; 
+        } else {
+            const ts = String(t).padStart(4, '0');
+            const r = ts.slice(0, -3);
+            const l = ts.slice(-3); 
+            const formattedRest = new Intl.NumberFormat('id-ID').format(Number(r));
+            
+            const finalHtml = `Rp. ${formattedRest}.<span class="text-red-500 dark:text-red-400">${l}</span>`;
+            document.getElementById('coTotal').innerHTML = finalHtml; 
+            document.getElementById('coTotalPay').innerHTML = finalHtml; 
+        }
     };
 
     window.applyVoucher = async () => { 
