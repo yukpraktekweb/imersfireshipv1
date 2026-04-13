@@ -789,30 +789,6 @@
                                 <p class="text-xs text-slate-500 mt-3"><i class="ph ph-info"></i> Pastikan WhatsApp Gateway Anda sudah diatur di Admin Settings.</p>
                             </div>
                         </form>
-
-                        <!-- Trik Script Mini untuk bypass tanpa harus edit app.js -->
-                        <script>
-                            function toggleCustomNumbers() {
-                                const val = document.getElementById('bcTargetSelect').value;
-                                const customArea = document.getElementById('bcCustomNumbers');
-                                if (val === 'custom') {
-                                    customArea.classList.remove('hidden');
-                                    customArea.setAttribute('required', 'true');
-                                } else {
-                                    customArea.classList.add('hidden');
-                                    customArea.removeAttribute('required');
-                                }
-                            }
-                            function prepareBroadcast() {
-                                const sel = document.getElementById('bcTargetSelect').value;
-                                const realTarget = document.getElementById('bcTarget');
-                                if (sel === 'custom') {
-                                    realTarget.value = 'CUSTOM:' + document.getElementById('bcCustomNumbers').value;
-                                } else {
-                                    realTarget.value = sel;
-                                }
-                            }
-                        </script>
                     </div>
                 </div>
 
@@ -1008,6 +984,49 @@
         </div>
     </div>
 
+    <!-- User Form Modal -->
+    <div id="userModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 hidden flex justify-center items-center p-4">
+        <div class="glass rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col border border-white/20">
+            <div class="p-6 border-b border-white/20 dark:border-slate-700/50 flex justify-between items-center bg-white/40 dark:bg-slate-800/40">
+                <h3 class="text-xl font-black text-slate-800 dark:text-white" id="userModalTitle">Tambah User Baru</h3>
+                <button onclick="closeUserModal()" class="text-slate-500 hover:text-red-500 bg-white/50 dark:bg-slate-700/50 p-2 rounded-full transition-colors"><i class="ph ph-x text-xl"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <form id="userForm" class="space-y-4">
+                    <input type="hidden" id="userId">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Lengkap</label>
+                        <input type="text" id="userName" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Email</label>
+                        <input type="email" id="userEmail" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">No WhatsApp</label>
+                        <input type="text" id="userWa" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Role</label>
+                        <select id="userRole" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium">
+                            <option value="user">User (Member)</option>
+                            <option value="agency">Agency</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div id="userPasswordContainer">
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Password</label>
+                        <input type="password" id="userPassword" placeholder="Kosongkan jika tidak ingin mengubah" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium">
+                    </div>
+                </form>
+            </div>
+            <div class="p-6 border-t border-white/20 dark:border-slate-700/50 bg-white/40 dark:bg-slate-800/40 flex justify-end gap-3">
+                <button onclick="closeUserModal()" class="px-6 py-3 text-slate-600 dark:text-slate-300 font-bold hover:bg-white/50 dark:hover:bg-slate-700/50 rounded-xl transition-colors">Batal</button>
+                <button onclick="saveUser()" class="bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-brand/30">Simpan User</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Custom Salespage Viewer Modal -->
     <div id="salesPageModal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-xl z-[70] hidden flex justify-center items-start p-0 sm:p-4 overflow-y-auto">
         <div class="bg-white dark:bg-slate-900 w-full max-w-4xl min-h-screen sm:min-h-[90vh] sm:rounded-3xl shadow-2xl flex flex-col relative mt-0 sm:mt-10">
@@ -1031,11 +1050,10 @@
         <span id="toastMsg" class="text-sm font-bold">Notification message</span>
     </div>
 
-
-<!-- ==========================================
+    <!-- ==========================================
          JAVASCRIPT LOGIC (app.js)
          ========================================== -->
-   <script>
+    <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzYn9Q-5Ks8T2fePe7PCyYIhQtUq6ZxCh7uszdCFEtquQD0uLDLAC3Rip-1_GmAbB3n/exec";
 
         async function apiCall(action, payload = null) {
@@ -1745,7 +1763,6 @@
                     </div>`;
                 }
 
-                // SINKRONISASI KOLOM: Nama&Email | WA | Info Rekening | Role | Code | Action
                 tbody.innerHTML += `
                     <tr class="hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors border-b border-white/10 dark:border-slate-700/30">
                         <td class="px-6 py-4">
@@ -1773,7 +1790,6 @@
             });
         };
 
-        // BUGS FIXED: Ditambahkan Optional Chaining untuk mencegah crash jika elemen HTML terhapus manual
         window.openUserModal = () => {
             try {
                 const form = document.getElementById('userForm');
@@ -1827,11 +1843,11 @@
 
                 let payload = { id, name, email, wa, role };
 
-                if (idEl && idEl.value) { // Jika ini adalah proses Edit User
+                if (idEl && idEl.value) { 
                     if (rawPass) {
                         payload.password = await window.hashPassword(rawPass);
                     }
-                } else { // Jika ini adalah proses Tambah User Baru
+                } else { 
                     if (!rawPass) {
                         showToast("Password wajib diisi untuk user baru", "error");
                         return;
@@ -1872,6 +1888,18 @@
                 if(modal) modal.classList.remove('hidden');
             } catch (e) {
                 console.error("Gagal membuka form Edit User: ", e);
+            }
+        };
+
+        window.deleteUser = async (id) => {
+            if(confirm("Hapus user ini?")) {
+                try {
+                    await apiCall('deleteUser', {id});
+                    showToast("User dihapus.");
+                    await loadAllData();
+                } catch (e) {
+                    showToast(e.message, "error");
+                }
             }
         };
 
@@ -2140,20 +2168,25 @@
         };
 
         window.openProductModal = () => {
-            const pf = document.getElementById('productForm');
-            if (pf) pf.reset();
-            document.getElementById('prodId').value = '';
-            document.getElementById('productModalTitle').innerText = 'Add New Product';
-            document.getElementById('checkoutLinkContainer').classList.add('hidden');
-            
-            document.getElementById('downloadsContainer').innerHTML = '';
-            document.getElementById('lessonsContainer').innerHTML = '';
-            window.addDownloadField(); 
-            window.addLessonField();
-            
-            window.toggleProductFields();
-            const modal = document.getElementById('productModal');
-            if (modal) modal.classList.remove('hidden');
+            try {
+                const pf = document.getElementById('productForm');
+                if (pf) pf.reset();
+                if(document.getElementById('prodId')) document.getElementById('prodId').value = '';
+                if(document.getElementById('productModalTitle')) document.getElementById('productModalTitle').innerText = 'Add New Product';
+                if(document.getElementById('checkoutLinkContainer')) document.getElementById('checkoutLinkContainer').classList.add('hidden');
+                
+                if(document.getElementById('downloadsContainer')) document.getElementById('downloadsContainer').innerHTML = '';
+                if(document.getElementById('lessonsContainer')) document.getElementById('lessonsContainer').innerHTML = '';
+                
+                window.addDownloadField(); 
+                window.addLessonField();
+                window.toggleProductFields();
+                
+                const modal = document.getElementById('productModal');
+                if (modal) modal.classList.remove('hidden');
+            } catch (e) {
+                console.error("Error openProductModal: ", e);
+            }
         };
 
         window.closeProductModal = () => {
@@ -2166,11 +2199,11 @@
             if (!typeEl) return;
             const type = typeEl.value;
             if(type === 'lms') {
-                document.getElementById('fieldLMS').classList.remove('hidden');
-                document.getElementById('fieldDownload').classList.add('hidden');
+                if(document.getElementById('fieldLMS')) document.getElementById('fieldLMS').classList.remove('hidden');
+                if(document.getElementById('fieldDownload')) document.getElementById('fieldDownload').classList.add('hidden');
             } else {
-                document.getElementById('fieldLMS').classList.add('hidden');
-                document.getElementById('fieldDownload').classList.remove('hidden');
+                if(document.getElementById('fieldLMS')) document.getElementById('fieldLMS').classList.add('hidden');
+                if(document.getElementById('fieldDownload')) document.getElementById('fieldDownload').classList.remove('hidden');
             }
         };
 
@@ -2206,55 +2239,59 @@
 
         window.copyCheckoutLink = () => {
             const input = document.getElementById('prodCheckoutUrl');
+            if(!input) return;
             input.select();
             document.execCommand('copy');
             showToast("Checkout Link Berhasil Disalin!");
         };
 
         window.saveProduct = async () => {
-            const id = document.getElementById('prodId').value;
-            const type = document.getElementById('prodType').value;
-            const title = document.getElementById('prodTitle').value;
-            const price = Number(document.getElementById('prodPrice').value);
-            const desc = document.getElementById('prodDesc').value;
-            const accessHtml = document.getElementById('prodAccess').value;
-            const salesPageUrl = document.getElementById('prodSalesPage').value;
-            const salesPageHtml = document.getElementById('prodSalesPageHtml').value;
-            const commissionType = document.getElementById('prodCommType').value;
-            const commissionValue = document.getElementById('prodCommValue').value;
-            
-            let finalImageUrl = document.getElementById('prodImageUrl').value;
-            const prodImageFile = document.getElementById('prodImageFile').files[0];
-            if (prodImageFile) {
-                finalImageUrl = await window.compressImage(prodImageFile, 600);
-            }
-            
-            if(!title || !price) {
-                showToast("Title and Price are required", "error");
-                return;
-            }
-
-            let data = { id: id || window.generateShortId(), type, title, price, description: desc, accessHtml, salesPageUrl, salesPageHtml, commissionType, commissionValue, imageUrl: finalImageUrl, createdAt: Date.now() };
-
-            if (type === 'download') {
-                let files = [];
-                document.querySelectorAll('.dl-item').forEach(el => {
-                    const lTitle = el.querySelector('.dl-title').value;
-                    const lUrl = el.querySelector('.dl-url').value;
-                    if(lTitle || lUrl) files.push({ title: lTitle, url: lUrl });
-                });
-                data.files = files;
-            } else {
-                let lessons = [];
-                document.querySelectorAll('.lesson-item').forEach(el => {
-                    const lTitle = el.querySelector('.lesson-title').value;
-                    const lUrl = el.querySelector('.lesson-url').value;
-                    if(lTitle || lUrl) lessons.push({ title: lTitle, url: lUrl });
-                });
-                data.lessons = lessons;
-            }
-
             try {
+                let idEl = document.getElementById('prodId');
+                let id = idEl ? idEl.value : '';
+                if (!id) id = window.generateShortId();
+                
+                const type = document.getElementById('prodType')?.value || 'download';
+                const title = document.getElementById('prodTitle')?.value || '';
+                const price = Number(document.getElementById('prodPrice')?.value || 0);
+                const desc = document.getElementById('prodDesc')?.value || '';
+                const accessHtml = document.getElementById('prodAccess')?.value || '';
+                const salesPageUrl = document.getElementById('prodSalesPage')?.value || '';
+                const salesPageHtml = document.getElementById('prodSalesPageHtml')?.value || '';
+                const commissionType = document.getElementById('prodCommType')?.value || 'percent';
+                const commissionValue = document.getElementById('prodCommValue')?.value || '';
+                
+                let finalImageUrl = document.getElementById('prodImageUrl')?.value || '';
+                const prodImageFile = document.getElementById('prodImageFile')?.files[0];
+                if (prodImageFile) {
+                    finalImageUrl = await window.compressImage(prodImageFile, 600);
+                }
+                
+                if(!title || !price) {
+                    showToast("Title and Price are required", "error");
+                    return;
+                }
+
+                let data = { id, type, title, price, description: desc, accessHtml, salesPageUrl, salesPageHtml, commissionType, commissionValue, imageUrl: finalImageUrl, createdAt: Date.now() };
+
+                if (type === 'download') {
+                    let files = [];
+                    document.querySelectorAll('.dl-item').forEach(el => {
+                        const lTitle = el.querySelector('.dl-title').value;
+                        const lUrl = el.querySelector('.dl-url').value;
+                        if(lTitle || lUrl) files.push({ title: lTitle, url: lUrl });
+                    });
+                    data.files = files;
+                } else {
+                    let lessons = [];
+                    document.querySelectorAll('.lesson-item').forEach(el => {
+                        const lTitle = el.querySelector('.lesson-title').value;
+                        const lUrl = el.querySelector('.lesson-url').value;
+                        if(lTitle || lUrl) lessons.push({ title: lTitle, url: lUrl });
+                    });
+                    data.lessons = lessons;
+                }
+
                 await apiCall('saveProduct', data);
                 showToast("Product saved!");
                 await loadAllData();
@@ -2265,46 +2302,50 @@
         };
 
         window.editProduct = (id) => {
-            const product = window.appState.products.find(p => p.id === id);
-            if(!product) return;
+            try {
+                const product = window.appState.products.find(p => p.id === id);
+                if(!product) return;
 
-            document.getElementById('productModalTitle').innerText = 'Edit Product';
-            document.getElementById('prodId').value = product.id;
-            document.getElementById('prodTitle').value = product.title;
-            document.getElementById('prodPrice').value = product.price;
-            document.getElementById('prodType').value = product.type;
-            document.getElementById('prodDesc').value = product.description || '';
-            document.getElementById('prodAccess').value = product.accessHtml || '';
-            
-            document.getElementById('prodSalesPage').value = product.salesPageUrl || '';
-            document.getElementById('prodSalesPageHtml').value = product.salesPageHtml || '';
-            document.getElementById('prodCommType').value = product.commissionType || 'percent';
-            document.getElementById('prodCommValue').value = product.commissionValue || '';
-            
-            document.getElementById('prodImageUrl').value = product.imageUrl || '';
-            document.getElementById('prodImageFile').value = '';
-            
-            document.getElementById('downloadsContainer').innerHTML = '';
-            document.getElementById('lessonsContainer').innerHTML = '';
+                if(document.getElementById('productModalTitle')) document.getElementById('productModalTitle').innerText = 'Edit Product';
+                if(document.getElementById('prodId')) document.getElementById('prodId').value = product.id;
+                if(document.getElementById('prodTitle')) document.getElementById('prodTitle').value = product.title;
+                if(document.getElementById('prodPrice')) document.getElementById('prodPrice').value = product.price;
+                if(document.getElementById('prodType')) document.getElementById('prodType').value = product.type;
+                if(document.getElementById('prodDesc')) document.getElementById('prodDesc').value = product.description || '';
+                if(document.getElementById('prodAccess')) document.getElementById('prodAccess').value = product.accessHtml || '';
+                
+                if(document.getElementById('prodSalesPage')) document.getElementById('prodSalesPage').value = product.salesPageUrl || '';
+                if(document.getElementById('prodSalesPageHtml')) document.getElementById('prodSalesPageHtml').value = product.salesPageHtml || '';
+                if(document.getElementById('prodCommType')) document.getElementById('prodCommType').value = product.commissionType || 'percent';
+                if(document.getElementById('prodCommValue')) document.getElementById('prodCommValue').value = product.commissionValue || '';
+                
+                if(document.getElementById('prodImageUrl')) document.getElementById('prodImageUrl').value = product.imageUrl || '';
+                if(document.getElementById('prodImageFile')) document.getElementById('prodImageFile').value = '';
+                
+                if(document.getElementById('downloadsContainer')) document.getElementById('downloadsContainer').innerHTML = '';
+                if(document.getElementById('lessonsContainer')) document.getElementById('lessonsContainer').innerHTML = '';
 
-            if (product.type === 'download') {
-                if(product.files && product.files.length > 0) {
-                    product.files.forEach(f => window.addDownloadField(f.title, f.url));
-                } else { window.addDownloadField(); }
-            } else {
-                if(product.lessons && product.lessons.length > 0) {
-                    product.lessons.forEach(l => window.addLessonField(l.title, l.url));
-                } else { window.addLessonField(); }
+                if (product.type === 'download') {
+                    if(product.files && product.files.length > 0) {
+                        product.files.forEach(f => window.addDownloadField(f.title, f.url));
+                    } else { window.addDownloadField(); }
+                } else {
+                    if(product.lessons && product.lessons.length > 0) {
+                        product.lessons.forEach(l => window.addLessonField(l.title, l.url));
+                    } else { window.addLessonField(); }
+                }
+                
+                window.toggleProductFields();
+
+                const checkoutUrl = window.location.origin + window.location.pathname + "?checkout=" + product.id;
+                if(document.getElementById('prodCheckoutUrl')) document.getElementById('prodCheckoutUrl').value = checkoutUrl;
+                if(document.getElementById('checkoutLinkContainer')) document.getElementById('checkoutLinkContainer').classList.remove('hidden');
+
+                const modal = document.getElementById('productModal');
+                if (modal) modal.classList.remove('hidden');
+            } catch (e) {
+                console.error("Error editing product: ", e);
             }
-            
-            window.toggleProductFields();
-
-            const checkoutUrl = window.location.origin + window.location.pathname + "?checkout=" + product.id;
-            document.getElementById('prodCheckoutUrl').value = checkoutUrl;
-            document.getElementById('checkoutLinkContainer').classList.remove('hidden');
-
-            const modal = document.getElementById('productModal');
-            if (modal) modal.classList.remove('hidden');
         };
 
         window.deleteProduct = async (id) => {
@@ -2401,40 +2442,46 @@
         };
 
         window.openCouponModal = () => {
-            const f = document.getElementById('couponForm');
-            if(f) f.reset();
-            document.getElementById('couponId').value = '';
-            document.getElementById('couponModalTitle').innerText = 'Tambah Kupon';
-            
-            const isAdmin = window.appState.user.role === 'admin';
-            const adminConfig = document.getElementById('adminCouponConfig');
-            const affConfig = document.getElementById('affiliateCouponConfig');
-            const masterSelect = document.getElementById('masterCouponSelect');
-
-            if (isAdmin) {
-                adminConfig.classList.remove('hidden');
-                affConfig.classList.add('hidden');
-                window.populateCouponProductSelect('all');
-            } else {
-                adminConfig.classList.add('hidden');
-                affConfig.classList.remove('hidden');
+            try {
+                const f = document.getElementById('couponForm');
+                if(f) f.reset();
+                if(document.getElementById('couponId')) document.getElementById('couponId').value = '';
+                if(document.getElementById('couponModalTitle')) document.getElementById('couponModalTitle').innerText = 'Tambah Kupon';
                 
-                // Affiliate cuma bisa milih dari Master Kupon buatan admin
-                masterSelect.innerHTML = '';
-                const masterCoupons = window.appState.coupons.filter(c => c.createdBy === 'admin' || !c.createdBy);
-                if(masterCoupons.length === 0) {
-                    masterSelect.innerHTML = '<option value="">Belum ada Master Kupon dari Admin</option>';
-                } else {
-                    masterSelect.innerHTML = '<option value="">-- Pilih Kupon Diskon --</option>';
-                    masterCoupons.forEach(mc => {
-                        const valLabel = mc.type === 'percent' ? `${mc.value}%` : window.formatRp(mc.value);
-                        masterSelect.innerHTML += `<option value="${mc.id}">${mc.code} (Diskon: ${valLabel})</option>`;
-                    });
-                }
-            }
+                const isAdmin = window.appState.user.role === 'admin';
+                const adminConfig = document.getElementById('adminCouponConfig');
+                const affConfig = document.getElementById('affiliateCouponConfig');
+                const masterSelect = document.getElementById('masterCouponSelect');
 
-            const cModal = document.getElementById('couponModal');
-            if(cModal) cModal.classList.remove('hidden');
+                if (isAdmin) {
+                    if(adminConfig) adminConfig.classList.remove('hidden');
+                    if(affConfig) affConfig.classList.add('hidden');
+                    window.populateCouponProductSelect('all');
+                } else {
+                    if(adminConfig) adminConfig.classList.add('hidden');
+                    if(affConfig) affConfig.classList.remove('hidden');
+                    
+                    // Affiliate cuma bisa milih dari Master Kupon buatan admin
+                    if(masterSelect) {
+                        masterSelect.innerHTML = '';
+                        const masterCoupons = window.appState.coupons.filter(c => c.createdBy === 'admin' || !c.createdBy);
+                        if(masterCoupons.length === 0) {
+                            masterSelect.innerHTML = '<option value="">Belum ada Master Kupon dari Admin</option>';
+                        } else {
+                            masterSelect.innerHTML = '<option value="">-- Pilih Kupon Diskon --</option>';
+                            masterCoupons.forEach(mc => {
+                                const valLabel = mc.type === 'percent' ? `${mc.value}%` : window.formatRp(mc.value);
+                                masterSelect.innerHTML += `<option value="${mc.id}">${mc.code} (Diskon: ${valLabel})</option>`;
+                            });
+                        }
+                    }
+                }
+
+                const cModal = document.getElementById('couponModal');
+                if(cModal) cModal.classList.remove('hidden');
+            } catch (e) {
+                console.error("Error openCouponModal: ", e);
+            }
         };
 
         window.closeCouponModal = () => {
@@ -2443,56 +2490,58 @@
         };
 
         window.saveCoupon = async () => {
-            let id = document.getElementById('couponId').value;
-            const code = document.getElementById('couponCode').value.toUpperCase().trim();
-            const isAdmin = window.appState.user.role === 'admin';
-
-            if(!code) {
-                showToast("Kode Kupon harus diisi", "error");
-                return;
-            }
-
-            let data = { 
-                id: id || window.generateShortId(), 
-                code: code,
-                createdBy: window.appState.user.id,
-                createdAt: Date.now()
-            };
-
-            // Jika Admin, simpan sesuai form angka manual.
-            if (isAdmin) {
-                data.type = document.getElementById('couponType').value;
-                data.value = Number(document.getElementById('couponValue').value);
-                data.applicableProductId = document.getElementById('couponProductId').value;
-                data.masterCouponId = '';
-                data.createdBy = 'admin'; // paksa sebagai admin
-                
-                if(!data.value) {
-                    showToast("Nilai potongan harus diisi", "error");
-                    return;
-                }
-            } 
-            // Jika User/Agency, Kloning nilai dari Master Kupon
-            else {
-                const masterId = document.getElementById('masterCouponSelect').value;
-                if (!masterId) {
-                    showToast("Pilih Master Kupon terlebih dahulu", "error");
-                    return;
-                }
-                
-                const masterCoupon = window.appState.coupons.find(c => c.id === masterId);
-                if (!masterCoupon) {
-                    showToast("Master Kupon tidak valid", "error");
-                    return;
-                }
-
-                data.type = masterCoupon.type;
-                data.value = masterCoupon.value;
-                data.applicableProductId = masterCoupon.applicableProductId;
-                data.masterCouponId = masterId;
-            }
-
             try {
+                let idEl = document.getElementById('couponId');
+                let id = idEl ? idEl.value : '';
+                
+                const code = document.getElementById('couponCode')?.value.toUpperCase().trim() || '';
+                const isAdmin = window.appState.user.role === 'admin';
+
+                if(!code) {
+                    showToast("Kode Kupon harus diisi", "error");
+                    return;
+                }
+
+                let data = { 
+                    id: id || window.generateShortId(), 
+                    code: code,
+                    createdBy: window.appState.user.id,
+                    createdAt: Date.now()
+                };
+
+                // Jika Admin, simpan sesuai form angka manual.
+                if (isAdmin) {
+                    data.type = document.getElementById('couponType')?.value || 'percent';
+                    data.value = Number(document.getElementById('couponValue')?.value || 0);
+                    data.applicableProductId = document.getElementById('couponProductId')?.value || 'all';
+                    data.masterCouponId = '';
+                    data.createdBy = 'admin'; // paksa sebagai admin
+                    
+                    if(!data.value) {
+                        showToast("Nilai potongan harus diisi", "error");
+                        return;
+                    }
+                } 
+                // Jika User/Agency, Kloning nilai dari Master Kupon
+                else {
+                    const masterId = document.getElementById('masterCouponSelect')?.value || '';
+                    if (!masterId) {
+                        showToast("Pilih Master Kupon terlebih dahulu", "error");
+                        return;
+                    }
+                    
+                    const masterCoupon = window.appState.coupons.find(c => c.id === masterId);
+                    if (!masterCoupon) {
+                        showToast("Master Kupon tidak valid", "error");
+                        return;
+                    }
+
+                    data.type = masterCoupon.type;
+                    data.value = masterCoupon.value;
+                    data.applicableProductId = masterCoupon.applicableProductId;
+                    data.masterCouponId = masterId;
+                }
+
                 await apiCall('saveCoupon', data);
                 showToast("Kupon tersimpan!");
                 await loadAllData();
@@ -2503,47 +2552,57 @@
         };
 
         window.editCoupon = (id) => {
-            const coupon = window.appState.coupons.find(c => c.id === id);
-            if(!coupon) return;
+            try {
+                const coupon = window.appState.coupons.find(c => c.id === id);
+                if(!coupon) return;
 
-            document.getElementById('couponModalTitle').innerText = 'Edit Kupon';
-            document.getElementById('couponId').value = coupon.id;
-            document.getElementById('couponCode').value = coupon.code;
-            
-            const isAdmin = window.appState.user.role === 'admin';
-            const adminConfig = document.getElementById('adminCouponConfig');
-            const affConfig = document.getElementById('affiliateCouponConfig');
-            const masterSelect = document.getElementById('masterCouponSelect');
-
-            // Cek apakah admin mengedit kupon punya dia, atau Affiliate mengedit kuponnya sendiri
-            if (isAdmin || coupon.createdBy === 'admin' || !coupon.createdBy) {
-                adminConfig.classList.remove('hidden');
-                affConfig.classList.add('hidden');
-                document.getElementById('couponType').value = coupon.type;
-                document.getElementById('couponValue').value = coupon.value;
-                window.populateCouponProductSelect(coupon.applicableProductId || 'all');
-            } else {
-                adminConfig.classList.add('hidden');
-                affConfig.classList.remove('hidden');
+                if(document.getElementById('couponModalTitle')) document.getElementById('couponModalTitle').innerText = 'Edit Kupon';
+                if(document.getElementById('couponId')) document.getElementById('couponId').value = coupon.id;
+                if(document.getElementById('couponCode')) document.getElementById('couponCode').value = coupon.code;
                 
-                masterSelect.innerHTML = '';
-                const masterCoupons = window.appState.coupons.filter(c => c.createdBy === 'admin' || !c.createdBy);
-                masterCoupons.forEach(mc => {
-                    const valLabel = mc.type === 'percent' ? `${mc.value}%` : window.formatRp(mc.value);
-                    const selected = mc.id === coupon.masterCouponId ? 'selected' : '';
-                    masterSelect.innerHTML += `<option value="${mc.id}" ${selected}>${mc.code} (Diskon: ${valLabel})</option>`;
-                });
+                const isAdmin = window.appState.user.role === 'admin';
+                const adminConfig = document.getElementById('adminCouponConfig');
+                const affConfig = document.getElementById('affiliateCouponConfig');
+                const masterSelect = document.getElementById('masterCouponSelect');
+
+                // Cek apakah admin mengedit kupon punya dia, atau Affiliate mengedit kuponnya sendiri
+                if (isAdmin || coupon.createdBy === 'admin' || !coupon.createdBy) {
+                    if(adminConfig) adminConfig.classList.remove('hidden');
+                    if(affConfig) affConfig.classList.add('hidden');
+                    if(document.getElementById('couponType')) document.getElementById('couponType').value = coupon.type;
+                    if(document.getElementById('couponValue')) document.getElementById('couponValue').value = coupon.value;
+                    window.populateCouponProductSelect(coupon.applicableProductId || 'all');
+                } else {
+                    if(adminConfig) adminConfig.classList.add('hidden');
+                    if(affConfig) affConfig.classList.remove('hidden');
+                    
+                    if(masterSelect) {
+                        masterSelect.innerHTML = '';
+                        const masterCoupons = window.appState.coupons.filter(c => c.createdBy === 'admin' || !c.createdBy);
+                        masterCoupons.forEach(mc => {
+                            const valLabel = mc.type === 'percent' ? `${mc.value}%` : window.formatRp(mc.value);
+                            const selected = mc.id === coupon.masterCouponId ? 'selected' : '';
+                            masterSelect.innerHTML += `<option value="${mc.id}" ${selected}>${mc.code} (Diskon: ${valLabel})</option>`;
+                        });
+                    }
+                }
+                
+                const cModal = document.getElementById('couponModal');
+                if(cModal) cModal.classList.remove('hidden');
+            } catch (e) {
+                console.error("Error editCoupon: ", e);
             }
-            
-            const cModal = document.getElementById('couponModal');
-            if(cModal) cModal.classList.remove('hidden');
         };
 
         window.deleteCoupon = async (id) => {
             if(confirm("Hapus kupon ini?")) {
-                await apiCall('deleteCoupon', {id});
-                showToast("Kupon dihapus.");
-                await loadAllData();
+                try {
+                    await apiCall('deleteCoupon', {id});
+                    showToast("Kupon dihapus.");
+                    await loadAllData();
+                } catch(e) {
+                    console.error("Error deleteCoupon: ", e);
+                }
             }
         };
 
@@ -3044,44 +3103,44 @@
         };
 
         window.saveSettings = async () => {
-            const name = document.getElementById('settingAppName').value;
-            const color = document.getElementById('settingColor').value;
-            const logoUrlInput = document.getElementById('settingLogoUrl').value;
-            const logoFileInput = document.getElementById('settingLogoFile').files[0];
-            
-            const rawAdminWa = document.getElementById('notifAdminWa').value;
-            const adminWa = window.formatPhoneNumber(rawAdminWa);
-
-            document.documentElement.style.setProperty('--brand-color', color);
-            document.documentElement.style.setProperty('--brand-hover', color); 
-            
-            document.querySelectorAll('.app-name-display').forEach(el => {
-                el.innerText = name || 'iMersFireship';
-            });
-            
-            const settingColorTextEl = document.getElementById('settingColorText');
-            if (settingColorTextEl) settingColorTextEl.value = color;
-
-            const bankItems = document.querySelectorAll('.bank-item');
-            const banks = [];
-            bankItems.forEach(el => {
-                const bname = el.querySelector('.b-name').value;
-                const bno = el.querySelector('.b-no').value;
-                const bowner = el.querySelector('.b-owner').value;
-                if(bname) banks.push({name: bname, no: bno, owner: bowner});
-            });
-
-            let finalLogoUrl = logoUrlInput;
-            if (logoFileInput) {
-                finalLogoUrl = await window.compressImage(logoFileInput, 400);
-            }
-            
-            const payload = {
-                appName: name, primaryColor: color, logoUrl: finalLogoUrl, banks: banks,
-                adminWa: adminWa
-            };
-
             try {
+                const name = document.getElementById('settingAppName')?.value || '';
+                const color = document.getElementById('settingColor')?.value || '#4f46e5';
+                const logoUrlInput = document.getElementById('settingLogoUrl')?.value || '';
+                const logoFileInput = document.getElementById('settingLogoFile')?.files?.[0];
+                
+                const rawAdminWa = document.getElementById('notifAdminWa')?.value || '';
+                const adminWa = window.formatPhoneNumber(rawAdminWa);
+
+                document.documentElement.style.setProperty('--brand-color', color);
+                document.documentElement.style.setProperty('--brand-hover', color); 
+                
+                document.querySelectorAll('.app-name-display').forEach(el => {
+                    el.innerText = name || 'iMersFireship';
+                });
+                
+                const settingColorTextEl = document.getElementById('settingColorText');
+                if (settingColorTextEl) settingColorTextEl.value = color;
+
+                const bankItems = document.querySelectorAll('.bank-item');
+                const banks = [];
+                bankItems.forEach(el => {
+                    const bname = el.querySelector('.b-name').value;
+                    const bno = el.querySelector('.b-no').value;
+                    const bowner = el.querySelector('.b-owner').value;
+                    if(bname) banks.push({name: bname, no: bno, owner: bowner});
+                });
+
+                let finalLogoUrl = logoUrlInput;
+                if (logoFileInput) {
+                    finalLogoUrl = await window.compressImage(logoFileInput, 400);
+                }
+                
+                const payload = {
+                    appName: name, primaryColor: color, logoUrl: finalLogoUrl, banks: banks,
+                    adminWa: adminWa
+                };
+
                 await apiCall('saveSettings', payload);
                 window.applyLogo(finalLogoUrl);
                 showToast("Admin settings saved!");
@@ -3100,7 +3159,12 @@
         window.showToast = (m, t='success') => {
             const el = document.getElementById('toast'), msgEl = document.getElementById('toastMsg');
             if(!el || !msgEl) return; msgEl.innerText = m;
-            el.classList.remove('hidden', 'translate-y-20', 'opacity-0');
+            
+            if (document.getElementById('toastIcon')) {
+                document.getElementById('toastIcon').className = t === 'error' ? "ph ph-x-circle text-red-500 text-2xl drop-shadow-sm" : "ph ph-check-circle text-green-500 text-2xl drop-shadow-sm";
+                el.className = t === 'error' ? "fixed bottom-6 right-6 glass text-slate-800 dark:text-white px-5 py-4 rounded-2xl shadow-2xl transform translate-y-0 opacity-100 transition-all duration-300 z-[60] flex items-center gap-3 border-l-4 border-l-red-500" : "fixed bottom-6 right-6 glass text-slate-800 dark:text-white px-5 py-4 rounded-2xl shadow-2xl transform translate-y-0 opacity-100 transition-all duration-300 z-[60] flex items-center gap-3 border-l-4 border-l-green-500";
+            }
+            
             setTimeout(() => { el.classList.add('translate-y-20', 'opacity-0'); }, 3000);
         };
 
@@ -3152,3 +3216,5 @@
             }, 100);
         }
     </script>
+</body>
+</html>
