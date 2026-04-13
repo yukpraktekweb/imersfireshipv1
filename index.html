@@ -1844,7 +1844,9 @@
         }
     };
 
-    // --- PRODUCT CRUD LOGIC ---
+    // ==========================================
+    // PRODUCT CRUD LOGIC
+    // ==========================================
 
     window.renderProductsTable = () => {
         const tbody = document.getElementById('productsTableBody');
@@ -2151,7 +2153,10 @@
         }
     };
 
-    // --- USERS CRUD LOGIC ---
+    // ==========================================
+    // USERS CRUD LOGIC
+    // ==========================================
+    
     window.renderUsersTable = () => {
         const tbody = document.getElementById('usersTableBody');
         if(!tbody) return;
@@ -2312,7 +2317,10 @@
         }
     };
 
-    // --- AFFILIATE SYSTEM LOGIC ---
+    // ==========================================
+    // AFFILIATE SYSTEM LOGIC
+    // ==========================================
+
     window.renderAffiliateList = () => {
         const userView = document.getElementById('userAffiliateView');
         const adminView = document.getElementById('adminAffiliateView');
@@ -2504,7 +2512,10 @@
         }
     };
 
-    // --- NOTIFICATION TEMPLATES LOGIC ---
+    // ==========================================
+    // NOTIFICATION TEMPLATES LOGIC
+    // ==========================================
+    
     window.renderTemplatesTable = () => {
         const tbody = document.getElementById('templatesTableBody');
         if(!tbody) return;
@@ -2589,7 +2600,10 @@
         }
     };
 
-    // --- COUPONS CRUD LOGIC ---
+    // ==========================================
+    // COUPONS CRUD LOGIC
+    // ==========================================
+    
     window.renderCouponsTable = () => {
         const tbody = document.getElementById('couponsTableBody');
         if(!tbody) return;
@@ -2773,6 +2787,9 @@
         } 
     };
 
+    // ==========================================
+    // MARKETPLACE LOGIC
+    // ==========================================
     function getYTVideoId(url) {
         if(!url) return ''; 
         const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/; 
@@ -2914,6 +2931,10 @@
         const ml = document.getElementById('marketplaceList'); 
         if(ml) ml.classList.remove('hidden'); 
     };
+
+    // ==========================================
+    // CHECKOUT LOGIC
+    // ==========================================
 
     window.loadCheckoutProduct = async (id) => { 
         try{ 
