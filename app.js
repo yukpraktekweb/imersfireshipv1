@@ -1,4 +1,4 @@
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzYn9Q-5Ks8T2fePe7PCyYIhQtUq6ZxCh7uszdCFEtquQD0uLDLAC3Rip-1_GmAbB3n/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKP0Utrdz5tZyXe9_x3oe49bjj_sm9acGPY_j-I0XGvYTYByfQA5_W_VEa-IVCnCrW/exec";
 
 async function apiCall(action, payload = null) {
     if (SCRIPT_URL === "URL_WEB_APP_APPS_SCRIPT_LO_DISINI" || !SCRIPT_URL) {
@@ -6,27 +6,12 @@ async function apiCall(action, payload = null) {
         throw new Error("URL Belum disetting");
     }
     
-    // Pastikan URL bersih dari spasi yang nggak sengaja ke-copy
-    const cleanUrl = SCRIPT_URL.trim();
-    let url = `${cleanUrl}?action=${action}`;
-    
-    // Konfigurasi fetch standar untuk Google Apps Script
-    // redirect: 'follow' wajib karena Google selalu melakukan redirect internal
-    let options = { 
-        method: 'GET', 
-        redirect: 'follow',
-        mode: 'cors'
-    };
-
+    let url = `${SCRIPT_URL}?action=${action}`;
+    let options = { method: 'GET', mode: 'cors', redirect: 'follow' };
     if (payload) {
         options.method = 'POST';
-        /**
-         * KUNCI PERBAIKAN CORS: 
-         * Kita gunakan 'text/plain'. Kalau pakai 'application/json', browser bakal kirim 
-         * request OPTIONS (Preflight) yang sering ditolak mentah-mentah sama Google.
-         */
-        options.headers = { 'Content-Type': 'text/plain;charset=utf-8' };
         options.body = JSON.stringify(payload);
+        options.headers = { 'Content-Type': 'text/plain;charset=utf-8' };
     }
 
     try {
@@ -41,11 +26,8 @@ async function apiCall(action, payload = null) {
         try {
             data = JSON.parse(text); 
         } catch(e) {
-            /** * Kalau masuk sini, artinya GAS lo ngirim HTML Error (Backend Crash).
-             * Browser nangkep ini sebagai CORS error karena halaman HTML Google nggak punya header CORS.
-             */
-            console.error("Respon bukan JSON (Kemungkinan GAS Error):", text);
-            throw new Error("Koneksi ditolak Google! Pastikan di GAS lo fungsinya sudah di-Return pakai ContentService.createTextOutput.");
+            console.error("Respon bukan JSON:", text);
+            throw new Error("Gagal konek ke DB! Pastikan URL Apps Script sudah di-Deploy (Anyone).");
         }
         
         if (!data.success) throw new Error(data.error || "Terjadi kesalahan pada server");
@@ -54,7 +36,7 @@ async function apiCall(action, payload = null) {
         console.error(`API Call Error (${action}) -> ${url}:`, err);
         
         if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
-            throw new Error("Koneksi ditolak Google! Pastikan di GAS lo fungsinya sudah di-Return pakai ContentService.createTextOutput.");
+            throw new Error("Koneksi ditolak Google! Wajib Deploy ulang Apps Script pakai 'Versi Baru' & Akses 'Siapa Saja'.");
         }
         
         throw err;
@@ -274,7 +256,7 @@ function setupUserUI() {
     if (userLicenseCodeEl) userLicenseCodeEl.innerText = user.license || 'TIDAK-ADA-LISENSI';
     
     if (user.role === 'user') {
-        document.querySelectorAll('[data-target="products"], [data-target="orders"], [data-target="coupons"], [data-target="users"], [data-target="broadcast"], [data-target="templates"], [data-target="settings"]').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('[data-target="products"], [data-target="orders"], [data-target="users"], [data-target="broadcast"], [data-target="templates"], [data-target="settings"]').forEach(el => el.classList.add('hidden'));
     }
 
     // --- FITUR BARU: SEMBUNYIKAN OMSET & CHART JIKA BUKAN ADMIN ---
@@ -400,6 +382,11 @@ async function loadAllData() {
     }
 }
 
+/**
+ * =========================================================================
+ * SETTINGS & LIVE CHAT UI BINDING (FIXED PERSISTENCE)
+ * =========================================================================
+ */
 function applySettingsUI() {
     const set = window.appState.settings;
     if(set.primaryColor) {
@@ -434,6 +421,7 @@ function applySettingsUI() {
         if (notifAdminWaEl) notifAdminWaEl.value = set.notifications.adminWa || '';
     }
 
+    // Setup WA Floating Button dari Database (SINKRONISASI DATABASE)
     const floatingCheckbox = document.getElementById('settingWaFloatingActive');
     if (floatingCheckbox) floatingCheckbox.checked = (set.waFloatingActive === true || set.waFloatingActive === 'true');
 
@@ -489,7 +477,7 @@ window.gotoLoginFromCheckout = () => {
 async function handleLogin(e) {
     e.preventDefault();
     const btn = document.getElementById('loginBtn');
-    const emailInput = document.getElementById('loginEmail').value.trim();
+    const email = document.getElementById('loginEmail').value;
     const rawPass = document.getElementById('loginPassword').value;
 
     btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> Memeriksa...';
@@ -499,8 +487,7 @@ async function handleLogin(e) {
         const res = await apiCall('getUsers');
         const users = res.data || [];
         
-        // FIXED LOGIN LOGIC: Case-insensitive email check & support for plain/hashed pwd
-        const user = users.find(u => u.email.toLowerCase() === emailInput.toLowerCase() && (u.password === hashedPass || u.password === rawPass));
+        const user = users.find(u => u.email === email && (u.password === hashedPass || u.password === rawPass));
 
         if (user) {
             window.appState.user = user;
@@ -538,7 +525,7 @@ async function handleRegister(e) {
     const name = document.getElementById('regName').value;
     const email = document.getElementById('regEmail').value;
     const rawWa = document.getElementById('regWa').value;
-    const wa = window.formatPhoneNumber(rawWa);
+    const wa = window.formatPhoneNumber(rawWa); 
     const rawPass = document.getElementById('regPassword').value;
 
     btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> Memproses...';
@@ -549,7 +536,7 @@ async function handleRegister(e) {
         
         await apiCall('register', payload);
         
-        showToast("Registrasi berhasil! Silakan Login.");
+        showToast("Registrasi berhasil! Silakan periksa WA/Email Anda.", "success");
         document.getElementById('registerForm').reset();
         switchAuthView('login');
     } catch(err) {
@@ -617,7 +604,9 @@ window.logout = () => {
     window.appState.user = null;
     localStorage.removeItem('iMersUser'); 
     localStorage.removeItem('checkoutIntent');
-    window.location.reload();
+    document.getElementById('view-auth').classList.remove('hidden');
+    document.getElementById('view-app').classList.add('hidden');
+    document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('hidden'));
 };
 
 // --- NAVIGATION & UI LOGIC ---
@@ -724,7 +713,7 @@ window.copyLicenseCode = () => {
     }
 };
 
-// --- USERS CRUD LOGIC (FIXED COLUMN MISMATCH) ---
+// --- USERS CRUD LOGIC ---
 window.renderUsersTable = () => {
     const tbody = document.getElementById('usersTableBody');
     if(!tbody) return;
@@ -743,36 +732,20 @@ window.renderUsersTable = () => {
         };
         const roleClass = roleColors[u.role] || roleColors['user'];
 
-        // FIXED BANK INFO CARD
-        let bankInfo = '<span class="text-slate-400 italic text-[10px]">Belum diatur</span>';
-        if(u.bankName || u.bankNo) {
-            bankInfo = `<div class="bg-brand/5 p-2 rounded-lg border border-brand/10 text-[10px]">
-                <p class="font-black text-brand uppercase">${u.bankName || '???'}</p>
-                <p class="font-mono font-bold text-slate-700 dark:text-white">${u.bankNo || '???'}</p>
-                <p class="text-slate-500 italic opacity-60">a.n ${u.bankOwner || '???'}</p>
-            </div>`;
-        }
-
-        // SINKRONISASI KOLOM: Nama&Email | Bank Affiliate | Role | Code | Action
         tbody.innerHTML += `
-            <tr class="hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors border-b border-white/10 dark:border-slate-700/30">
+            <tr class="hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors">
                 <td class="px-6 py-4">
-                    <p class="font-bold text-slate-800 dark:text-white text-base leading-tight">${u.name}</p>
+                    <p class="font-bold text-slate-800 dark:text-white text-base">${u.name}</p>
                     <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">${u.email}</p>
-                    <div class="flex items-center gap-1 mt-1 text-[10px] font-bold text-brand bg-brand/5 px-1.5 py-0.5 rounded w-max">
-                        <i class="ph ph-whatsapp-logo"></i> ${u.wa || '-'}
-                    </div>
                 </td>
-                <td class="px-6 py-4">${bankInfo}</td>
-                <td class="px-6 py-4 text-center">
+                <td class="px-6 py-4 font-medium text-slate-700 dark:text-slate-300">${u.wa || '-'}</td>
+                <td class="px-6 py-4">
                     <span class="${roleClass} px-3 py-1 rounded-lg text-xs font-black uppercase">${u.role}</span>
                 </td>
                 <td class="px-6 py-4 font-mono text-xs text-brand font-bold">${u.affiliateCode || u.license || '-'}</td>
                 <td class="px-6 py-4 text-right">
-                    <div class="flex items-center justify-end gap-2">
-                        <button onclick="editUser('${u.id}')" class="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 rounded-xl transition-colors" title="Edit"><i class="ph ph-pencil-simple text-xl"></i></button>
-                        <button onclick="deleteUser('${u.id}')" class="p-2 text-red-600 dark:text-red-400 hover:bg-red-500/20 rounded-xl transition-colors" title="Delete"><i class="ph ph-trash text-xl"></i></button>
-                    </div>
+                    <button onclick="editUser('${u.id}')" class="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 rounded-xl transition-colors" title="Edit"><i class="ph ph-pencil-simple text-xl"></i></button>
+                    <button onclick="deleteUser('${u.id}')" class="p-2 text-red-600 dark:text-red-400 hover:bg-red-500/20 rounded-xl transition-colors" title="Delete"><i class="ph ph-trash text-xl"></i></button>
                 </td>
             </tr>
         `;
@@ -864,7 +837,11 @@ window.deleteUser = async (id) => {
     }
 };
 
-// --- AFFILIATE SYSTEM LOGIC (DUAL LINKS - INTERNAL FIXED) ---
+/**
+ * =========================================================================
+ * AFFILIATE SYSTEM LOGIC (DUAL LINKS - INTERNAL FIXED)
+ * =========================================================================
+ */
 window.renderAffiliateList = () => {
     const container = document.getElementById('affiliateProductsList');
     const refCodeEl = document.getElementById('affiliateRefCode');
@@ -947,7 +924,7 @@ window.renderAffiliateList = () => {
                         <label class="block text-[10px] font-black text-brand uppercase mb-1 ml-1">Link Checkout Langsung</label>
                         <div class="flex gap-2">
                             <input type="text" readonly value="${affCheckoutLink}" class="flex-1 px-3 py-2 bg-brand/5 border border-brand/20 rounded-xl text-[11px] font-bold text-brand outline-none">
-                            <button onclick="copyTextToClipboard('${affCheckoutLink}')" class="bg-brand text-white p-2 rounded-xl shadow-lg shadow-brand/30 transition-transform active:scale-95">
+                            <button onclick="copyTextToClipboard('${affCheckoutLink}')" class="bg-brand text-white p-2 rounded-xl shadow-lg shadow-brand/20 transition-transform active:scale-95">
                                 <i class="ph ph-copy"></i>
                             </button>
                         </div>
@@ -1113,7 +1090,7 @@ window.renderProductsTable = () => {
         tr.className = "hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors";
         tr.innerHTML = `
             <td class="px-6 py-4">
-                <p class="font-bold text-slate-800 dark:text-white text-base leading-tight">${p.title}</p>
+                <p class="font-bold text-slate-800 dark:text-white text-base">${p.title}</p>
                 <p class="text-xs text-slate-500 dark:text-slate-400 w-48 truncate font-medium mt-1" title="${p.description}">${p.description || ''}</p>
             </td>
             <td class="px-6 py-4">${typeLabel}</td>
@@ -1203,7 +1180,9 @@ window.copyCheckoutLink = () => {
 };
 
 window.saveProduct = async () => {
-    const id = document.getElementById('prodId').value;
+    let id = document.getElementById('prodId').value;
+    if (!id) id = window.generateShortId();
+    
     const type = document.getElementById('prodType').value;
     const title = document.getElementById('prodTitle').value;
     const price = Number(document.getElementById('prodPrice').value);
@@ -1214,10 +1193,15 @@ window.saveProduct = async () => {
     const commissionType = document.getElementById('prodCommType').value;
     const commissionValue = document.getElementById('prodCommValue').value;
     
-    let finalImageUrl = document.getElementById('prodImageUrl').value;
-    const prodImageFile = document.getElementById('prodImageFile').files[0];
-    if (prodImageFile) {
-        finalImageUrl = await window.compressImage(prodImageFile, 600);
+    const prodImageUrlEl = document.getElementById('prodImageUrl');
+    const prodImageFileEl = document.getElementById('prodImageFile');
+
+    let finalImageUrl = prodImageUrlEl.value;
+    if (prodImageFileEl.files && prodImageFileEl.files[0]) {
+        // Menggunakan kompresi saat upload gambar produk (Max 600px)
+        finalImageUrl = await window.compressImage(prodImageFileEl.files[0], 600);
+        prodImageFileEl.value = ''; // KUNCI PERBAIKAN: Bersihkan input file
+        prodImageUrlEl.value = finalImageUrl;
     }
     
     if(!title || !price) {
@@ -1225,7 +1209,7 @@ window.saveProduct = async () => {
         return;
     }
 
-    let data = { id: id || window.generateShortId(), type, title, price, description: desc, accessHtml, salesPageUrl, salesPageHtml, commissionType, commissionValue, imageUrl: finalImageUrl, createdAt: Date.now() };
+    let data = { id, type, title, price, description: desc, accessHtml, salesPageUrl, salesPageHtml, commissionType, commissionValue, imageUrl: finalImageUrl };
 
     if (type === 'download') {
         let files = [];
@@ -1324,121 +1308,6 @@ window.duplicateProduct = async (id) => {
         await loadAllData();
     } catch(err) {
         showToast("Error duplicating: " + err.message, "error");
-    }
-};
-
-// --- COUPONS CRUD LOGIC ---
-
-window.renderCouponsTable = () => {
-    const tbody = document.getElementById('couponsTableBody');
-    if(!tbody) return;
-    tbody.innerHTML = '';
-
-    const isUserAdmin = window.appState.user.role === 'admin';
-    const filteredCoupons = isUserAdmin ? window.appState.coupons : window.appState.coupons.filter(c => c.createdBy === window.appState.user.id);
-
-    if(filteredCoupons.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-10 text-center text-slate-500 font-bold">Belum ada kupon. Buat kupon pertama Anda.</td></tr>`;
-        return;
-    }
-
-    filteredCoupons.forEach(c => {
-        const typeLabel = c.type === 'percent' ? 'Persentase (%)' : 'Nominal (Rp)';
-        const valueLabel = c.type === 'percent' ? `${c.value}%` : window.formatRp(c.value);
-        
-        let applicableLabel = '<span class="bg-blue-500/20 text-blue-700 dark:text-blue-400 px-3 py-1 rounded-lg text-xs font-black uppercase">Semua Produk</span>';
-        if (c.applicableProductId && c.applicableProductId !== 'all') {
-            const prod = window.appState.products.find(p => p.id === c.applicableProductId);
-            applicableLabel = prod 
-                ? `<span class="bg-slate-500/20 text-slate-700 dark:text-slate-300 px-3 py-1 rounded-lg text-xs font-bold border border-white/20 dark:border-slate-700" title="${prod.title}">${prod.title.substring(0, 20)}${prod.title.length > 20 ? '...' : ''}</span>` 
-                : '<span class="text-red-500 text-xs font-black uppercase">Produk Dihapus</span>';
-        }
-
-        tbody.innerHTML += `
-            <tr class="hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors">
-                <td class="px-6 py-4 font-mono font-black text-brand dark:text-brandHover text-base">${c.code}</td>
-                <td class="px-6 py-4 font-medium">${typeLabel}</td>
-                <td class="px-6 py-4 font-black">${valueLabel}</td>
-                <td class="px-6 py-4">${applicableLabel}</td>
-                <td class="px-6 py-4 text-right">
-                    <button onclick="editCoupon('${c.id}')" class="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 rounded-xl transition-colors" title="Edit"><i class="ph ph-pencil-simple text-xl"></i></button>
-                    <button onclick="deleteCoupon('${c.id}')" class="p-2 text-red-600 dark:text-red-400 hover:bg-red-500/20 rounded-xl transition-colors" title="Delete"><i class="ph ph-trash text-xl"></i></button>
-                </td>
-            </tr>
-        `;
-    });
-};
-
-window.populateCouponProductSelect = (selectedId = 'all') => {
-    const select = document.getElementById('couponProductId');
-    if(!select) return;
-    select.innerHTML = '<option value="all">Semua Produk</option>';
-    window.appState.products.forEach(p => {
-        const option = document.createElement('option');
-        option.value = p.id;
-        option.innerText = p.title;
-        if (p.id === selectedId) option.selected = true;
-        select.appendChild(option);
-    });
-};
-
-window.openCouponModal = () => {
-    const f = document.getElementById('couponForm');
-    if(f) f.reset();
-    document.getElementById('couponId').value = '';
-    document.getElementById('couponModalTitle').innerText = 'Tambah Kupon';
-    window.populateCouponProductSelect('all');
-    const cModal = document.getElementById('couponModal');
-    if(cModal) cModal.classList.remove('hidden');
-};
-
-window.closeCouponModal = () => {
-    const cModal = document.getElementById('couponModal');
-    if(cModal) cModal.classList.add('hidden');
-};
-
-window.saveCoupon = async () => {
-    let id = document.getElementById('couponId').value;
-    const code = document.getElementById('couponCode').value.toUpperCase().trim();
-    const type = document.getElementById('couponType').value;
-    const value = Number(document.getElementById('couponValue').value);
-    const applicableProductId = document.getElementById('couponProductId').value;
-
-    if(!code || !value) {
-        showToast("Kode dan Nilai harus diisi", "error");
-        return;
-    }
-
-    let data = { id: id || window.generateShortId(), code, type, value, applicableProductId, createdBy: window.appState.user.id };
-
-    try {
-        await apiCall('saveCoupon', data);
-        showToast("Kupon tersimpan!");
-        await loadAllData();
-        window.closeCouponModal();
-    } catch (e) {
-        showToast("Error: " + e.message, "error");
-    }
-};
-
-window.editCoupon = (id) => {
-    const coupon = window.appState.coupons.find(c => c.id === id);
-    if(!coupon) return;
-    document.getElementById('couponModalTitle').innerText = 'Edit Kupon';
-    document.getElementById('couponId').value = coupon.id;
-    document.getElementById('couponCode').value = coupon.code;
-    document.getElementById('couponType').value = coupon.type;
-    document.getElementById('couponValue').value = coupon.value;
-    window.populateCouponProductSelect(coupon.applicableProductId || 'all');
-    const cModal = document.getElementById('couponModal');
-    if(cModal) cModal.classList.remove('hidden');
-};
-
-window.deleteCoupon = async (id) => {
-    if(confirm("Hapus kupon ini?")) {
-        await apiCall('deleteCoupon', {id});
-        showToast("Kupon dihapus.");
-        await loadAllData();
     }
 };
 
@@ -1635,6 +1504,7 @@ window.closeProductViewer = () => {
 
 window.loadCheckoutProduct = async (productId) => {
     try {
+        // Paralelkan pengambilan produk dan pengaturan
         const [res, setRes] = await Promise.all([
             apiCall('getProducts'),
             apiCall('getSettings')
@@ -1800,12 +1670,33 @@ window.submitCheckout = async () => {
     const btn = document.getElementById('btnSubmitCheckout');
     btn.innerText = "PROCESSING...";
 
+    const methodRaw = methodEl.value;
     const product = window.appState.currentCheckoutProduct;
     const coupon = window.appState.currentCheckoutCoupon;
     const uniqueCode = window.appState.currentCheckoutUniqueCode;
 
     const hashedPassword = await window.hashPassword(rawPassword);
     const refId = localStorage.getItem('affiliateRef') || null;
+
+    // --- LOGIKA AUTO REGISTER USER BARU SAAT CHECKOUT ---
+    if (!window.appState.user) {
+        try {
+            const regPayload = { 
+                name: name, 
+                email: email, 
+                wa: wa, 
+                password: hashedPassword, 
+                role: 'user', 
+                license: 'USER-BASIC-' + Math.floor(Math.random() * 9999),
+                affiliateCode: name.replace(/\s+/g, '').toUpperCase().substring(0, 5) + Math.floor(Math.random() * 1000)
+            };
+            await apiCall('register', regPayload);
+        } catch (err) {
+            alert("Gagal membuat akun: " + err.message + "\n\nJika email sudah terdaftar, silakan klik tombol 'Login' di bagian atas halaman.");
+            btn.innerText = "CREATE ORDER";
+            return; 
+        }
+    }
 
     let discount = 0;
     if (coupon) {
@@ -1814,24 +1705,62 @@ window.submitCheckout = async () => {
     }
     const finalTotal = product.price - 113 - discount + uniqueCode;
     
+    // FORMAT INFORMASI BANK
+    let methodDisplay = methodRaw;
+    let paymentInstructions = '';
+
+    if (methodRaw.startsWith('Manual-')) {
+        const bankName = methodRaw.split('-')[1];
+        const bankObj = window.appState.settings.banks.find(b => b.name === bankName);
+        if (bankObj) {
+            methodDisplay = `Transfer Bank ${bankObj.name} (No. Rek: ${bankObj.no} a.n ${bankObj.owner})`;
+            paymentInstructions = `
+                <div class="bg-white/50 dark:bg-slate-800/50 p-4 rounded-xl mt-4 text-center border border-slate-200 dark:border-slate-700 shadow-inner">
+                    <span class="block text-sm text-slate-500 dark:text-slate-400">Transfer ke Bank</span>
+                    <strong class="text-xl text-slate-800 dark:text-white">${bankObj.name}</strong><br>
+                    <span class="block text-sm text-slate-500 dark:text-slate-400 mt-2">Nomor Rekening</span>
+                    <strong class="text-2xl text-brand font-mono select-all">${bankObj.no}</strong><br>
+                    <span class="block text-sm text-slate-500 dark:text-slate-400 mt-2">Atas Nama</span>
+                    <strong class="text-lg text-slate-800 dark:text-white">${bankObj.owner}</strong>
+                </div>
+            `;
+        }
+    }
+
     const orderData = {
-        id: window.generateShortId(), customerName: name, customerEmail: email, customerWA: wa,
-        productId: product.id, productTitle: product.title, basePrice: product.price,
-        discountApplied: discount, totalPay: finalTotal, paymentMethod: methodEl.value,
-        status: 'Pending', userPasswordHash: hashedPassword, affiliateRef: refId, createdAt: Date.now()
+        id: window.generateShortId(), 
+        customerName: name,
+        customerEmail: email,
+        customerWA: wa,
+        productId: product.id,
+        productTitle: product.title,
+        basePrice: product.price,
+        discountApplied: discount,
+        couponCode: coupon ? coupon.code : null,
+        totalPay: finalTotal,
+        paymentMethod: methodDisplay, 
+        status: 'Pending',
+        userPasswordHash: hashedPassword,
+        affiliateRef: refId
     };
 
     try {
         await apiCall('saveOrder', orderData);
         
         document.getElementById('view-checkout').innerHTML = `
-            <div class="max-w-md mx-auto mt-20 glass p-10 rounded-3xl shadow-2xl text-center border border-white/40">
-                <div class="w-24 h-24 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-green-500">
-                    <i class="ph ph-check-circle text-6xl"></i>
+            <div class="max-w-md mx-auto mt-10 glass p-8 sm:p-10 rounded-3xl shadow-2xl text-center border border-white/40 dark:border-slate-700/50">
+                <div class="w-20 h-20 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-green-500/30">
+                    <i class="ph ph-check text-4xl text-white font-black"></i>
                 </div>
-                <h2 class="text-3xl font-black text-slate-800 dark:text-white mb-2">Order Diterima!</h2>
-                <p class="mb-8">Admin akan segera memverifikasi pesanan Anda. Akses produk akan terbuka otomatis.</p>
-                <a href="?" class="bg-brand text-white font-bold py-4 px-8 rounded-xl block shadow-lg shadow-brand/30">Selesai & Login</a>
+                <h2 class="text-2xl font-black text-slate-800 dark:text-white mb-2">Order Diterima!</h2>
+                <p class="text-slate-600 dark:text-slate-400 mb-2 font-medium">Lakukan pembayaran sejumlah <br><span class="text-red-500 text-3xl font-black mt-2 inline-block select-all">${window.formatRp(finalTotal)}</span></p>
+                
+                ${paymentInstructions}
+
+                <div class="bg-blue-500/10 border border-blue-500/20 p-4 rounded-2xl text-xs text-blue-800 dark:text-blue-300 text-left mb-6 mt-6 font-medium leading-relaxed">
+                    Pastikan Anda menyimpan bukti transfer. Admin akan segera memverifikasi pesanan Anda. Akses produk akan terbuka otomatis di akun Anda setelah status menjadi <b>Paid</b>.
+                </div>
+                <a href="?" class="bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 text-white font-bold py-4 px-8 rounded-xl block transition-all shadow-lg shadow-brand/30">Selesai & Login</a>
             </div>
         `;
     } catch(e) {
@@ -1839,6 +1768,8 @@ window.submitCheckout = async () => {
         btn.innerText = "CREATE ORDER";
     }
 };
+
+// --- ORDERS LOGIC (ADMIN) ---
 
 window.renderOrdersTable = () => {
     const tbody = document.getElementById('ordersTableBody');
@@ -1864,7 +1795,7 @@ window.renderOrdersTable = () => {
             <tr class="hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors">
                 <td class="px-6 py-4 text-xs font-mono font-bold text-slate-500 dark:text-slate-400">#${o.id.substring(0,6)}</td>
                 <td class="px-6 py-4">
-                    <p class="font-bold text-slate-800 dark:text-white text-base leading-tight">${o.customerName}</p>
+                    <p class="font-bold text-slate-800 dark:text-white text-base">${o.customerName}</p>
                     <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">${o.paymentMethod}</p>
                 </td>
                 <td class="px-6 py-4 text-sm text-slate-700 dark:text-slate-300 font-bold">${o.productTitle}</td>
@@ -1893,6 +1824,8 @@ window.approveOrder = async (orderId) => {
         }
     }
 };
+
+// --- SETTINGS & UI UTILITIES LOGIC ---
 
 window.renderSettingsBankList = () => {
     const container = document.getElementById('bankList');
@@ -1931,13 +1864,22 @@ window.addBankField = () => {
 window.saveSettings = async () => {
     const name = document.getElementById('settingAppName').value;
     const color = document.getElementById('settingColor').value;
-    const logoUrlInput = document.getElementById('settingLogoUrl').value;
-    const logoFileInput = document.getElementById('settingLogoFile').files[0];
+    const logoUrlInputEl = document.getElementById('settingLogoUrl');
+    const logoFileInputEl = document.getElementById('settingLogoFile');
     
-    const rawAdminWa = document.getElementById('notifAdminWa').value;
+    const waProv = document.getElementById('notifWaProvider') ? document.getElementById('notifWaProvider').value : '';
+    const waToken = document.getElementById('notifWaToken') ? document.getElementById('notifWaToken').value : '';
+    const rawAdminWa = document.getElementById('notifAdminWa') ? document.getElementById('notifAdminWa').value : '';
     const adminWa = window.formatPhoneNumber(rawAdminWa);
-    const waFloatingActive = document.getElementById('settingWaFloatingActive').checked;
-    const waFloatingNum = document.getElementById('settingWaFloatingNum').value;
+    
+    const emailProv = document.getElementById('notifEmailProvider') ? document.getElementById('notifEmailProvider').value : '';
+    const emailToken = document.getElementById('notifEmailToken') ? document.getElementById('notifEmailToken').value : '';
+    const telegramToken = document.getElementById('notifTelegramToken') ? document.getElementById('notifTelegramToken').value : '';
+    const telegramChatId = document.getElementById('notifTelegramChatId') ? document.getElementById('notifTelegramChatId').value : '';
+    
+    // WA Melayang Data (AMBIL DARI DOM)
+    const waFloatingActive = document.getElementById('settingWaFloatingActive') ? document.getElementById('settingWaFloatingActive').checked : false;
+    const waFloatingNum = document.getElementById('settingWaFloatingNum') ? document.getElementById('settingWaFloatingNum').value : '';
 
     document.documentElement.style.setProperty('--brand-color', color);
     document.documentElement.style.setProperty('--brand-hover', color); 
@@ -1958,54 +1900,117 @@ window.saveSettings = async () => {
         if(bname) banks.push({name: bname, no: bno, owner: bowner});
     });
 
-    let finalLogoUrl = logoUrlInput;
-    if (logoFileInput) {
-        finalLogoUrl = await window.compressImage(logoFileInput, 400);
+    let finalLogoUrl = logoUrlInputEl.value;
+    if (logoFileInputEl.files && logoFileInputEl.files[0]) {
+        finalLogoUrl = await window.compressImage(logoFileInputEl.files[0], 400);
+        logoFileInputEl.value = ''; 
+        logoUrlInputEl.value = finalLogoUrl; 
     }
     
     const payload = {
-        appName: name, primaryColor: color, logoUrl: finalLogoUrl, banks: banks,
-        adminWa: adminWa, waFloatingActive: waFloatingActive, waFloatingNum: waFloatingNum
+        appName: name,
+        primaryColor: color,
+        logoUrl: finalLogoUrl,
+        banks: banks,
+        waProvider: waProv, waToken: waToken, adminWa: adminWa,
+        emailProvider: emailProv, emailToken: emailToken,
+        telegramToken: telegramToken, telegramChatId: telegramChatId,
+        waFloatingActive: waFloatingActive,
+        waFloatingNum: waFloatingNum
     };
 
     try {
         await apiCall('saveSettings', payload);
         window.applyLogo(finalLogoUrl);
-        showToast("Admin settings saved!");
+        showToast("Admin settings saved to server!");
         await loadAllData();
     } catch(e) {
-        showToast(e.message, "error");
+        showToast("Error saving settings: " + e.message, "error");
     }
 };
 
 window.applyLogo = (src) => {
     const appLogoSidebar = document.getElementById('appLogoSidebar');
-    if (src) { if(appLogoSidebar) { appLogoSidebar.src = src; appLogoSidebar.classList.remove('hidden'); } }
-    else { if(appLogoSidebar) { appLogoSidebar.src = ''; appLogoSidebar.classList.add('hidden'); } }
-};
+    const appIconSidebarBg = document.getElementById('appIconSidebarBg');
+    const appLogoAuth = document.getElementById('appLogoAuth');
+    const appIconAuth = document.getElementById('appIconAuth');
 
-window.showToast = (m, t='success') => {
-    const el = document.getElementById('toast'), msgEl = document.getElementById('toastMsg');
-    if(!el || !msgEl) return; msgEl.innerText = m;
-    el.classList.remove('hidden', 'translate-y-20', 'opacity-0');
-    setTimeout(() => { el.classList.add('translate-y-20', 'opacity-0'); }, 3000);
+    if (src) {
+        if(appLogoSidebar) { appLogoSidebar.src = src; appLogoSidebar.classList.remove('hidden'); }
+        if(appIconSidebarBg) appIconSidebarBg.classList.add('hidden');
+        
+        if(appLogoAuth) { appLogoAuth.src = src; appLogoAuth.classList.remove('hidden'); }
+        if(appIconAuth) appIconAuth.classList.add('hidden');
+    } else {
+        if(appLogoSidebar) { appLogoSidebar.src = ''; appLogoSidebar.classList.add('hidden'); }
+        if(appIconSidebarBg) appIconSidebarBg.classList.remove('hidden');
+        
+        if(appLogoAuth) { appLogoAuth.src = ''; appLogoAuth.classList.add('hidden'); }
+        if(appIconAuth) appIconAuth.classList.remove('hidden');
+    }
 };
 
 function updateDashboardStats() {
-    document.getElementById('statProducts').innerText = window.appState.products.length;
-    if (window.appState.user.role === 'admin') {
-        document.getElementById('statUsers').innerText = window.appState.usersData.length;
-        let rev = 0, ord = 0;
-        window.appState.orders.forEach(o => { if (o.status === 'Paid') { rev += Number(o.totalPay || 0); ord++; } });
-        document.getElementById('statRevenue').innerText = window.formatRp(rev);
-        document.getElementById('statOrders').innerText = ord;
-    }
+    if (document.getElementById('statProducts')) document.getElementById('statProducts').innerText = window.appState.products.length;
+    if (document.getElementById('statUsers')) document.getElementById('statUsers').innerText = window.appState.usersData.length;
+    
+    let rev = 0;
+    let ord = 0;
+    window.appState.orders.forEach(o => {
+        if(o.status === 'Paid') {
+            rev += Number(o.totalPay || 0);
+            ord++;
+        }
+    });
+
+    if (document.getElementById('statRevenue')) document.getElementById('statRevenue').innerText = window.formatRp(rev);
+    if (document.getElementById('statOrders')) document.getElementById('statOrders').innerText = ord;
 }
+
+window.showToast = (msg, type = 'success') => {
+    const toast = document.getElementById('toast');
+    if(!toast) return;
+    const msgEl = document.getElementById('toastMsg');
+    if(msgEl) msgEl.innerText = msg;
+    
+    const icon = document.getElementById('toastIcon');
+    
+    toast.className = "fixed bottom-6 right-6 glass text-slate-800 dark:text-white px-5 py-4 rounded-2xl shadow-2xl transition-all duration-300 z-[60] flex items-center gap-3 border-l-4 transform translate-y-20 opacity-0 hidden";
+
+    if (icon) {
+        if(type === 'error') {
+            icon.className = "ph ph-x-circle text-red-500 text-3xl drop-shadow-sm";
+            toast.classList.add('border-l-red-500');
+        } else if (type === 'info') {
+            icon.className = "ph ph-info text-blue-500 text-3xl drop-shadow-sm";
+            toast.classList.add('border-l-blue-500');
+        } else {
+            icon.className = "ph ph-check-circle text-green-500 text-3xl drop-shadow-sm";
+            toast.classList.add('border-l-green-500');
+        }
+    }
+
+    toast.classList.remove('hidden');
+    void toast.offsetWidth;
+
+    toast.classList.remove('translate-y-20', 'opacity-0');
+    toast.classList.add('translate-y-0', 'opacity-100');
+
+    if (window.toastTimeout) {
+        clearTimeout(window.toastTimeout);
+    }
+
+    window.toastTimeout = setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-20', 'opacity-0');
+        setTimeout(() => toast.classList.add('hidden'), 300); 
+    }, 3000);
+};
 
 function initChart() {
     setTimeout(() => {
         const canvas = document.getElementById('salesChart');
-        if(!canvas || window.appState.user.role !== 'admin') return;
+        if(!canvas) return;
 
         let existingChart = Chart.getChart(canvas);
         if (existingChart) existingChart.destroy();
@@ -2023,16 +2028,29 @@ function initChart() {
                     data: [1200000, 1900000, 3000000, 5000000, 4200000, 6800000, 12450000],
                     borderColor: getComputedStyle(document.documentElement).getPropertyValue('--brand-color').trim() || '#4f46e5',
                     backgroundColor: 'rgba(79, 70, 229, 0.1)',
-                    borderWidth: 3, tension: 0.4, fill: true,
-                    pointBackgroundColor: '#ffffff', pointBorderColor: '#4f46e5',
-                    pointBorderWidth: 2, pointRadius: 4, pointHoverRadius: 6
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#4f46e5',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 }]
             },
             options: {
-                responsive: true, plugins: { legend: { display: false } },
+                responsive: true,
+                plugins: { legend: { display: false } },
                 scales: {
-                    y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor } },
-                    x: { grid: { display: false }, ticks: { color: textColor } }
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: gridColor }, 
+                        ticks: { color: textColor }
+                    },
+                    x: { 
+                        grid: { display: false },
+                        ticks: { color: textColor }
+                    }
                 }
             }
         });
