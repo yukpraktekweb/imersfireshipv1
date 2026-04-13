@@ -1654,27 +1654,22 @@
         }
         window.applyLogo(set.logoUrl);
         
-        const settingAppNameEl = document.getElementById('settingAppName');
-        if (settingAppNameEl) settingAppNameEl.value = set.appName || 'iMersFireship';
-        
-        const settingColorEl = document.getElementById('settingColor');
-        if (settingColorEl) settingColorEl.value = set.primaryColor || '#4f46e5';
-        
-        const settingColorTextEl = document.getElementById('settingColorText');
-        if (settingColorTextEl) settingColorTextEl.value = set.primaryColor || '#4f46e5';
-        
-        const settingLogoUrlEl = document.getElementById('settingLogoUrl');
-        if (settingLogoUrlEl) settingLogoUrlEl.value = set.logoUrl || '';
+        if (document.getElementById('settingAppName')) document.getElementById('settingAppName').value = set.appName || 'iMersFireship';
+        if (document.getElementById('settingColor')) document.getElementById('settingColor').value = set.primaryColor || '#4f46e5';
+        if (document.getElementById('settingColorText')) document.getElementById('settingColorText').value = set.primaryColor || '#4f46e5';
+        if (document.getElementById('settingLogoUrl')) document.getElementById('settingLogoUrl').value = set.logoUrl || '';
 
+        // TAMPILKAN KEMBALI DATA NOTIFIKASI (WA, Email, Telegram)
         if (set.notifications) {
-            const notifWaProviderEl = document.getElementById('notifWaProvider');
-            if (notifWaProviderEl) notifWaProviderEl.value = set.notifications.waProvider || 'fonnte';
+            if (document.getElementById('notifWaProvider')) document.getElementById('notifWaProvider').value = set.notifications.waProvider || 'fonnte';
+            if (document.getElementById('notifWaToken')) document.getElementById('notifWaToken').value = set.notifications.waToken || '';
+            if (document.getElementById('notifAdminWa')) document.getElementById('notifAdminWa').value = set.notifications.adminWa || '';
             
-            const notifWaTokenEl = document.getElementById('notifWaToken');
-            if (notifWaTokenEl) notifWaTokenEl.value = set.notifications.waToken || '';
+            if (document.getElementById('notifEmailProvider')) document.getElementById('notifEmailProvider').value = set.notifications.emailProvider || 'google';
+            if (document.getElementById('notifEmailToken')) document.getElementById('notifEmailToken').value = set.notifications.emailToken || '';
             
-            const notifAdminWaEl = document.getElementById('notifAdminWa');
-            if (notifAdminWaEl) notifAdminWaEl.value = set.notifications.adminWa || '';
+            if (document.getElementById('notifTelegramToken')) document.getElementById('notifTelegramToken').value = set.notifications.telegramToken || '';
+            if (document.getElementById('notifTelegramChatId')) document.getElementById('notifTelegramChatId').value = set.notifications.telegramChatId || '';
         }
     };
 
