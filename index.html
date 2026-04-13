@@ -1142,3 +1142,2312 @@
         <i id="toastIcon" class="ph ph-check-circle text-green-500 text-2xl drop-shadow-sm"></i>
         <span id="toastMsg" class="text-sm font-bold">Notification message</span>
     </div>
+<!-- ==========================================
+         JAVASCRIPT LOGIC (app.js)
+         ========================================== -->
+    <script>
+        const SCRIPT_URL = "URL_WEB_APP_APPS_SCRIPT_LO_DISINI"; // GANTI DENGAN URL WEB APP LO
+
+        async function apiCall(action, payload = null) {
+            if (SCRIPT_URL === "URL_WEB_APP_APPS_SCRIPT_LO_DISINI" || !SCRIPT_URL) {
+                showToast("Script URL belum diganti di kode HTML!", "error");
+                throw new Error("URL Belum disetting");
+            }
+            
+            const cleanUrl = SCRIPT_URL.trim();
+            let url = `${cleanUrl}?action=${action}`;
+            
+            let options = { 
+                method: 'GET', 
+                redirect: 'follow',
+                mode: 'cors'
+            };
+
+            if (payload) {
+                options.method = 'POST';
+                options.headers = { 'Content-Type': 'text/plain;charset=utf-8' };
+                options.body = JSON.stringify(payload);
+            }
+
+            try {
+                const response = await fetch(url, options);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP Error: ${response.status}`);
+                }
+                
+                const text = await response.text(); 
+                let data;
+                try {
+                    data = JSON.parse(text); 
+                } catch(e) {
+                    console.error("Respon bukan JSON (Kemungkinan GAS Error):", text);
+                    throw new Error("Koneksi ditolak Google! Pastikan URL Web App sudah benar.");
+                }
+                
+                if (!data.success) throw new Error(data.error || "Terjadi kesalahan pada server");
+                return data;
+            } catch (err) {
+                console.error(`API Call Error (${action}) -> ${url}:`, err);
+                if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+                    throw new Error("Koneksi ditolak Google! Pastikan URL Web App sudah benar.");
+                }
+                throw err;
+            }
+        }
+
+        window.hashPassword = async (password) => {
+            const msgBuffer = new TextEncoder().encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        };
+
+        window.toggleTheme = () => {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            updateThemeIcon(isDark);
+        };
+
+        function updateThemeIcon(isDark) {
+            const icon = document.getElementById('themeIcon');
+            if(icon) icon.className = isDark ? 'ph ph-sun text-xl' : 'ph ph-moon text-xl';
+        }
+
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            updateThemeIcon(true);
+        } else {
+            updateThemeIcon(false);
+        }
+
+        window.appState = {
+            user: null, products: [], orders: [], coupons: [], templates: [], usersData: [], isSidebarOpen: false,
+            settings: {
+                banks: [],
+                notifications: { waProvider: 'fonnte', waToken: '', adminWa: '', emailProvider: 'google', emailToken: '', telegramToken: '', telegramChatId: '' }
+            },
+            currentCheckoutProduct: null, currentCheckoutUniqueCode: 0, currentCheckoutCoupon: null
+        };
+
+        window.formatRp = (num) => {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
+        };
+
+        window.generateShortId = () => {
+            return Math.random().toString(36).substring(2, 8).toUpperCase();
+        };
+
+        window.formatPhoneNumber = (number) => {
+            if (!number) return '';
+            let cleaned = String(number).replace(/\D/g, '');
+            if (cleaned.startsWith('0')) {
+                cleaned = '62' + cleaned.substring(1);
+            } else if (cleaned.startsWith('8')) {
+                cleaned = '62' + cleaned;
+            }
+            return cleaned;
+        };
+
+        window.compressImage = (file, maxWidth = 400) => {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        let w = img.width;
+                        let h = img.height;
+                        if (w > maxWidth) {
+                            h = Math.round((maxWidth / w) * h);
+                            w = maxWidth;
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = w;
+                        canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        resolve(canvas.toDataURL('image/jpeg', 0.7)); 
+                    };
+                };
+            });
+        };
+
+        function initAppEvents() {
+            const lf = document.getElementById('loginForm');
+            if (lf) lf.addEventListener('submit', handleLogin);
+
+            const rf = document.getElementById('registerForm');
+            if (rf) rf.addEventListener('submit', handleRegister);
+
+            const ff = document.getElementById('forgotForm');
+            if (ff) ff.addEventListener('submit', handleForgot);
+
+            const cpf = document.getElementById('changePasswordForm');
+            if (cpf) cpf.addEventListener('submit', handleChangePassword);
+
+            const mmBtn = document.getElementById('mobileMenuBtn');
+            if (mmBtn) mmBtn.addEventListener('click', toggleMobileMenu);
+
+            const sc = document.getElementById('settingColor');
+            if (sc) {
+                sc.addEventListener('input', (e) => {
+                    const sct = document.getElementById('settingColorText');
+                    if (sct) sct.value = e.target.value;
+                });
+            }
+
+            const settingLogoUrl = document.getElementById('settingLogoUrl');
+            const settingLogoFile = document.getElementById('settingLogoFile');
+            if (settingLogoUrl && settingLogoFile) {
+                settingLogoUrl.addEventListener('input', () => {
+                    settingLogoFile.value = ''; 
+                });
+            }
+
+            const prodImageUrl = document.getElementById('prodImageUrl');
+            const prodImageFile = document.getElementById('prodImageFile');
+            if (prodImageUrl && prodImageFile) {
+                prodImageUrl.addEventListener('input', () => {
+                    prodImageFile.value = '';
+                });
+            }
+
+            initializeAppState();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener("DOMContentLoaded", initAppEvents);
+        } else {
+            initAppEvents();
+        }
+
+        async function initializeAppState() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const checkoutId = urlParams.get('checkout');
+            const refId = urlParams.get('ref'); 
+            
+            if(refId) localStorage.setItem('affiliateRef', refId);
+            
+            const savedUser = localStorage.getItem('iMersUser');
+            if(savedUser) {
+                window.appState.user = JSON.parse(savedUser);
+            }
+
+            if (checkoutId) {
+                document.getElementById('view-auth').classList.add('hidden');
+                document.getElementById('view-app').classList.add('hidden');
+                document.getElementById('view-checkout').classList.remove('hidden');
+                
+                if(window.appState.user) {
+                    const coGuestState = document.getElementById('coGuestState');
+                    const coAuthFields = document.getElementById('coAuthFields');
+                    const coLoggedInState = document.getElementById('coLoggedInState');
+                    const coLoggedInName = document.getElementById('coLoggedInName');
+                    
+                    if (coGuestState) coGuestState.classList.add('hidden');
+                    if (coAuthFields) coAuthFields.classList.add('hidden');
+                    if (coLoggedInState) coLoggedInState.classList.remove('hidden');
+                    if (coLoggedInName) coLoggedInName.innerText = window.appState.user.name;
+                    
+                    const coName = document.getElementById('coName');
+                    if(coName) coName.value = window.appState.user.name;
+                    const coEmail = document.getElementById('coEmail');
+                    if(coEmail) coEmail.value = window.appState.user.email;
+                    const coWa = document.getElementById('coWA');
+                    if(coWa) coWa.value = window.appState.user.wa || '';
+                    const coPwd = document.getElementById('coPassword');
+                    if(coPwd) coPwd.value = 'dummy_pwd'; 
+                } else {
+                    const helper = document.getElementById('coLoginHelper');
+                    if (helper) helper.classList.remove('hidden');
+                }
+
+                await loadCheckoutProduct(checkoutId);
+            } else {
+                if(window.appState.user) {
+                    document.getElementById('view-auth').classList.add('hidden');
+                    document.getElementById('view-checkout').classList.add('hidden');
+                    document.getElementById('view-app').classList.remove('hidden');
+                    
+                    setupUserUI();
+                    await loadAllData();
+                    window.navigate('dashboard');
+                    initChart();
+                } else {
+                    try {
+                        const setRes = await apiCall('getSettings');
+                        if(setRes && setRes.data) {
+                            window.appState.settings = setRes.data;
+                            applySettingsUI();
+                        }
+                    } catch(e){}
+                }
+            }
+        }
+
+        function setupUserUI() {
+            const user = window.appState.user;
+            const userDisplayNameEl = document.getElementById('userDisplayName');
+            if (userDisplayNameEl) userDisplayNameEl.innerText = user.name;
+            
+            const userRoleDisplayEl = document.getElementById('userRoleDisplay');
+            if (userRoleDisplayEl) userRoleDisplayEl.innerText = user.role;
+            
+            const userLicenseCodeEl = document.getElementById('userLicenseCode');
+            if (userLicenseCodeEl) userLicenseCodeEl.innerText = user.license || 'TIDAK-ADA-LISENSI';
+            
+            if (user.role === 'user') {
+                document.querySelectorAll('[data-target="products"], [data-target="orders"], [data-target="coupons"], [data-target="users"], [data-target="broadcast"], [data-target="templates"], [data-target="settings"]').forEach(el => el.classList.add('hidden'));
+            }
+
+            if (user.role !== 'admin') {
+                const revenueCard = document.getElementById('statRevenue')?.closest('.glass');
+                if (revenueCard) revenueCard.classList.add('hidden');
+                
+                const ordersCard = document.getElementById('statOrders')?.closest('.glass');
+                if (ordersCard) ordersCard.classList.add('hidden');
+                
+                const chartCard = document.getElementById('salesChart')?.closest('.glass');
+                if (chartCard) chartCard.classList.add('hidden');
+
+                if (user.role === 'agency' || user.role === 'user') {
+                    document.querySelectorAll('[data-target="coupons"]').forEach(el => el.classList.remove('hidden'));
+                }
+            }
+
+            if(!user.affiliateCode) {
+                user.affiliateCode = user.name.replace(/\s+/g, '').toUpperCase().substring(0, 5) + Math.floor(Math.random()*1000);
+            }
+        }
+
+        async function loadAllData() {
+            try {
+                showToast("Memuat data dari server...", "info");
+                
+                const safeCall = async (action) => {
+                    try { return await apiCall(action); } 
+                    catch(e) { 
+                        console.warn(action + ' failed:', e); 
+                        showToast(`Gagal memuat ${action}: ` + e.message, "error"); 
+                        return {data: []}; 
+                    }
+                };
+
+                const [prodRes, orderRes, coupRes, tmplRes, userRes, setRes] = await Promise.all([
+                    apiCall('getProducts'),
+                    apiCall('getOrders'),
+                    apiCall('getCoupons'),
+                    apiCall('getTemplates'),
+                    apiCall('getUsers'),
+                    apiCall('getSettings')
+                ]);
+                
+                window.appState.products = prodRes.data || [];
+                window.appState.orders = orderRes.data || [];
+                window.appState.coupons = coupRes.data || [];
+                window.appState.templates = tmplRes.data || [];
+                window.appState.usersData = userRes.data || [];
+                if (setRes.data && !Array.isArray(setRes.data)) {
+                    window.appState.settings = setRes.data;
+                }
+
+                if(window.appState.products.length) window.appState.products.sort((a,b) => b.createdAt - a.createdAt);
+                if(window.appState.orders.length) window.appState.orders.sort((a,b) => b.createdAt - a.createdAt);
+                if(window.appState.coupons.length) window.appState.coupons.sort((a,b) => b.createdAt - a.createdAt);
+                if(window.appState.templates.length) window.appState.templates.sort((a,b) => a.createdAt - b.createdAt);
+                
+                const statProductsEl = document.getElementById('statProducts');
+                if (statProductsEl) statProductsEl.innerText = window.appState.products.length;
+                
+                const statUsersEl = document.getElementById('statUsers');
+                if (statUsersEl) statUsersEl.innerText = window.appState.usersData.length;
+                
+                let totalRevenue = 0;
+                let activeOrdersCount = 0;
+                window.appState.orders.forEach(o => {
+                    if (o.status === 'Paid') {
+                        totalRevenue += Number(o.totalPay || o.basePrice || 0);
+                        activeOrdersCount++;
+                    }
+                });
+
+                const statOrdersEl = document.getElementById('statOrders');
+                if (statOrdersEl) statOrdersEl.innerText = activeOrdersCount;
+
+                const statRevenueEl = document.getElementById('statRevenue');
+                if (statRevenueEl) {
+                    statRevenueEl.innerText = window.formatRp(totalRevenue);
+                }
+                
+                applySettingsUI();
+                renderProductsTable();
+                renderMarketplaceList();
+                renderOrdersTable();
+                renderCouponsTable();
+                renderTemplatesTable();
+                renderSettingsBankList();
+                renderUsersTable();
+                renderAffiliateList();
+
+                if (window.appState.user && window.appState.user.role !== 'admin') {
+                    const btnAdd = document.getElementById('btnAddUser');
+                    if(btnAdd) btnAdd.classList.add('hidden');
+                }
+
+                const recContainer = document.getElementById('recentOrdersList');
+                if (recContainer) {
+                    recContainer.innerHTML = '';
+                    const recents = window.appState.orders.slice(0, 5);
+                    if(recents.length === 0) recContainer.innerHTML = '<p class="text-sm text-slate-500 text-center py-4">Belum ada order</p>';
+                    recents.forEach(o => {
+                        const statusClass = o.status === 'Paid' ? 'bg-green-500/20 text-green-600' : 'bg-yellow-500/20 text-yellow-600';
+                        recContainer.innerHTML += `
+                            <div class="flex items-center gap-4 bg-white/30 dark:bg-slate-800/30 p-3 rounded-xl border border-white/40 dark:border-slate-700/50">
+                                <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${o.status === 'Paid'?'from-emerald-400 to-teal-500':'from-amber-400 to-orange-500'} flex items-center justify-center text-white shadow-sm"><i class="ph ph-shopping-bag text-xl"></i></div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-bold text-slate-800 dark:text-white truncate">${o.productTitle}</p>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">${o.customerName}</p>
+                                </div>
+                                <span class="px-2.5 py-1 ${statusClass} text-[10px] font-black uppercase rounded-lg">${o.status}</span>
+                            </div>
+                        `;
+                    });
+                }
+                
+                showToast("Data berhasil dimuat!", "success");
+            } catch (err) {
+                console.error("Gagal memuat sebagian data:", err);
+                showToast("Sebagian data gagal dimuat dari server.", "error");
+            }
+        }
+
+        function applySettingsUI() {
+            const set = window.appState.settings;
+            if(set.primaryColor) {
+                document.documentElement.style.setProperty('--brand-color', set.primaryColor);
+                document.documentElement.style.setProperty('--brand-hover', set.primaryColor);
+            }
+            if(set.appName) {
+                document.querySelectorAll('.app-name-display').forEach(el => el.innerText = set.appName);
+            }
+            applyLogo(set.logoUrl);
+            
+            const settingAppNameEl = document.getElementById('settingAppName');
+            if (settingAppNameEl) settingAppNameEl.value = set.appName || 'iMersFireship';
+            
+            const settingColorEl = document.getElementById('settingColor');
+            if (settingColorEl) settingColorEl.value = set.primaryColor || '#4f46e5';
+            
+            const settingColorTextEl = document.getElementById('settingColorText');
+            if (settingColorTextEl) settingColorTextEl.value = set.primaryColor || '#4f46e5';
+            
+            const settingLogoUrlEl = document.getElementById('settingLogoUrl');
+            if (settingLogoUrlEl) settingLogoUrlEl.value = set.logoUrl || '';
+
+            if (set.notifications) {
+                const notifWaProviderEl = document.getElementById('notifWaProvider');
+                if (notifWaProviderEl) notifWaProviderEl.value = set.notifications.waProvider || 'fonnte';
+                
+                const notifWaTokenEl = document.getElementById('notifWaToken');
+                if (notifWaTokenEl) notifWaTokenEl.value = set.notifications.waToken || '';
+                
+                const notifAdminWaEl = document.getElementById('notifAdminWa');
+                if (notifAdminWaEl) notifAdminWaEl.value = set.notifications.adminWa || '';
+            }
+        }
+
+        // --- AUTH LOGIC ---
+        window.switchAuthView = (view) => {
+            const lf = document.getElementById('loginForm');
+            const rf = document.getElementById('registerForm');
+            const ff = document.getElementById('forgotForm');
+            const subtitle = document.getElementById('authSubtitle');
+
+            if (lf) lf.classList.add('hidden');
+            if (rf) rf.classList.add('hidden');
+            if (ff) ff.classList.add('hidden');
+
+            if (view === 'login') {
+                if (lf) lf.classList.remove('hidden');
+                if (subtitle) subtitle.innerText = "Admin & User Login";
+            } else if (view === 'register') {
+                if (rf) rf.classList.remove('hidden');
+                if (subtitle) subtitle.innerText = "Daftar Akun Baru";
+            } else if (view === 'forgot') {
+                if (ff) ff.classList.remove('hidden');
+                if (subtitle) subtitle.innerText = "Pemulihan Akun";
+            }
+        };
+
+        window.gotoLoginFromCheckout = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const checkoutId = urlParams.get('checkout');
+            if(checkoutId) localStorage.setItem('checkoutIntent', checkoutId);
+            
+            document.getElementById('view-checkout').classList.add('hidden');
+            document.getElementById('view-auth').classList.remove('hidden');
+            switchAuthView('login');
+        };
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            const emailInput = document.getElementById('loginEmail').value.trim();
+            const rawPass = document.getElementById('loginPassword').value;
+
+            btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> Memeriksa...';
+            
+            try {
+                const hashedPass = await window.hashPassword(rawPass);
+                const res = await apiCall('getUsers');
+                const users = res.data || [];
+                
+                const user = users.find(u => u.email.toLowerCase() === emailInput.toLowerCase() && (u.password === hashedPass || u.password === rawPass));
+
+                if (user) {
+                    window.appState.user = user;
+                    localStorage.setItem('iMersUser', JSON.stringify(user)); 
+                    
+                    const checkoutIntent = localStorage.getItem('checkoutIntent');
+                    if (checkoutIntent) {
+                        localStorage.removeItem('checkoutIntent');
+                        window.location.href = '?checkout=' + checkoutIntent;
+                        return;
+                    }
+                    
+                    document.getElementById('view-auth').classList.add('hidden');
+                    document.getElementById('view-app').classList.remove('hidden');
+                    
+                    setupUserUI();
+                    showToast("Login Berhasil! Selamat datang " + user.name);
+                    
+                    await loadAllData();
+                    window.navigate('dashboard');
+                    initChart();
+                } else {
+                    showToast("Email atau password salah.", "error");
+                }
+            } catch (err) {
+                showToast(err.message, "error");
+            } finally {
+                btn.innerHTML = '<span>Sign In</span> <i class="ph ph-sign-in"></i>';
+            }
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            const btn = document.getElementById('regBtn');
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const rawWa = document.getElementById('regWa').value;
+            const wa = window.formatPhoneNumber(rawWa);
+            const rawPass = document.getElementById('regPassword').value;
+
+            btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> Memproses...';
+            
+            try {
+                const hashedPass = await window.hashPassword(rawPass);
+                const payload = { name, email, wa, password: hashedPass, role: 'user', license: 'USER-BASIC-'+Math.floor(Math.random()*999) };
+                
+                await apiCall('register', payload);
+                
+                showToast("Registrasi berhasil! Silakan Login.");
+                document.getElementById('registerForm').reset();
+                switchAuthView('login');
+            } catch(err) {
+                showToast("Error: " + err.message, "error");
+            } finally {
+                btn.innerHTML = '<span>Daftar Sekarang</span> <i class="ph ph-user-plus"></i>';
+            }
+        }
+
+        async function handleForgot(e) {
+            e.preventDefault();
+            const btn = document.getElementById('forgotBtn');
+            const email = document.getElementById('forgotEmail').value;
+
+            btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> Memproses...';
+
+            try {
+                await apiCall('forgotPassword', {email});
+                showToast("Instruksi reset password telah dikirim ke Email/WA Anda.", "success");
+                document.getElementById('forgotForm').reset();
+                switchAuthView('login');
+            } catch(err) {
+                showToast("Error: " + err.message, "error");
+            } finally {
+                btn.innerHTML = '<span>Kirim Reset Link</span> <i class="ph ph-paper-plane-tilt"></i>';
+            }
+        }
+
+        async function handleChangePassword(e) {
+            if(e) e.preventDefault();
+            const oldPass = document.getElementById('cpOldPass').value;
+            const newPass = document.getElementById('cpNewPass').value;
+            const confirmPass = document.getElementById('cpConfirmPass').value;
+            const btn = document.getElementById('cpBtn');
+
+            if (newPass !== confirmPass) {
+                showToast("Konfirmasi password baru tidak cocok!", "error");
+                return;
+            }
+
+            btn.innerHTML = '<i class="ph ph-spinner animate-spin text-xl"></i> Memproses...';
+
+            try {
+                const oldHash = await window.hashPassword(oldPass);
+                const newHash = await window.hashPassword(newPass);
+
+                const payload = {
+                    id: window.appState.user.id,
+                    oldPasswordHash: oldHash,
+                    newPasswordHash: newHash
+                };
+
+                await apiCall('changePassword', payload);
+                
+                showToast("Password berhasil diperbarui!", "success");
+                document.getElementById('changePasswordForm').reset();
+            } catch (err) {
+                showToast("Error: " + err.message, "error");
+            } finally {
+                btn.innerHTML = '<i class="ph ph-floppy-disk text-xl"></i> Simpan Password';
+            }
+        }
+
+        window.logout = () => {
+            window.appState.user = null;
+            localStorage.removeItem('iMersUser'); 
+            localStorage.removeItem('checkoutIntent');
+            window.location.reload();
+        };
+
+        // --- NAVIGATION & UI LOGIC ---
+        window.navigate = (targetId) => {
+            document.querySelectorAll('.nav-link').forEach(link => {
+                if(link.dataset.target === targetId) {
+                    link.classList.add('bg-white/40', 'dark:bg-slate-800/40', 'active');
+                    link.classList.remove('bg-transparent');
+                } else {
+                    link.classList.remove('bg-white/40', 'dark:bg-slate-800/40', 'active');
+                    link.classList.add('bg-transparent');
+                }
+            });
+
+            const titles = {
+                'dashboard': 'Dashboard Overview',
+                'products': 'Product Management',
+                'marketplace': 'Digital Marketplace',
+                'license': 'License Management',
+                'orders': 'Order Management',
+                'coupons': 'Kupon & Diskon',
+                'users': 'Users Directory',
+                'affiliate': 'Affiliate Center',
+                'templates': 'Notification Templates',
+                'broadcast': 'Marketing Broadcast',
+                'settings': 'Admin Settings',
+                'profile': 'My Profile'
+            };
+            const pageTitleEl = document.getElementById('pageTitle');
+            if (pageTitleEl) pageTitleEl.innerText = titles[targetId] || 'Panel';
+
+            document.querySelectorAll('.content-section').forEach(el => el.classList.add('hidden'));
+            const targetEl = document.getElementById('content-' + targetId);
+            if (targetEl) targetEl.classList.remove('hidden');
+
+            if(window.innerWidth < 768 && window.appState.isSidebarOpen) {
+                toggleMobileMenu();
+            }
+        };
+
+        window.toggleMobileMenu = () => {
+            window.appState.isSidebarOpen = !window.appState.isSidebarOpen;
+            const sidebar = document.getElementById('sidebar');
+            if(window.appState.isSidebarOpen) {
+                if(sidebar) sidebar.classList.remove('-translate-x-full');
+            } else {
+                if(sidebar) sidebar.classList.add('-translate-x-full');
+            }
+        };
+
+        window.toggleCustomNumbers = () => {
+            const val = document.getElementById('bcTargetSelect').value;
+            const customArea = document.getElementById('bcCustomNumbers');
+            if (val === 'custom') {
+                customArea.classList.remove('hidden');
+                customArea.setAttribute('required', 'true');
+            } else {
+                customArea.classList.add('hidden');
+                customArea.removeAttribute('required');
+            }
+        };
+
+        window.prepareBroadcast = () => {
+            const sel = document.getElementById('bcTargetSelect').value;
+            const realTarget = document.getElementById('bcTarget');
+            if (sel === 'custom') {
+                realTarget.value = 'CUSTOM:' + document.getElementById('bcCustomNumbers').value;
+            } else {
+                realTarget.value = sel;
+            }
+        };
+
+        async function simulateBroadcast(e) {
+            if(e) e.preventDefault();
+            const target = document.getElementById('bcTarget').value;
+            const msg = document.getElementById('bcMessage').value;
+            if(!msg) return;
+
+            showToast("Memproses Broadcast...", "info");
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="ph ph-spinner animate-spin text-xl"></i> Mengirim...';
+            }
+
+            try {
+                const payload = {
+                    target: target,
+                    message: msg
+                };
+                
+                await apiCall('sendBroadcast', payload);
+                
+                showToast("Berhasil mengirim notifikasi massal!", "success");
+                document.getElementById('bcMessage').value = '';
+            } catch(err) {
+                showToast("Error memproses broadcast: " + err.message, "error");
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="ph ph-paper-plane-tilt text-xl"></i> Kirim Broadcast Sekarang';
+                }
+            }
+        }
+
+        window.copyLicenseCode = () => {
+            const code = document.getElementById('userLicenseCode').innerText;
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(code).then(() => {
+                    showToast("Kode Lisensi berhasil disalin!");
+                }).catch(err => {
+                    console.error("Gagal menyalin: ", err);
+                });
+            } else {
+                const textArea = document.createElement("textarea");
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand("copy");
+                textArea.remove();
+                showToast("Kode Lisensi berhasil disalin!");
+            }
+        };
+
+        // --- USERS CRUD LOGIC ---
+        window.renderUsersTable = () => {
+            const tbody = document.getElementById('usersTableBody');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+
+            if(window.appState.usersData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-10 text-center text-slate-500 font-bold">Belum ada user.</td></tr>`;
+                return;
+            }
+
+            window.appState.usersData.forEach(u => {
+                const roleColors = {
+                    admin: 'bg-purple-500/20 text-purple-700 dark:text-purple-400',
+                    agency: 'bg-blue-500/20 text-blue-700 dark:text-blue-400',
+                    user: 'bg-slate-500/20 text-slate-700 dark:text-slate-400'
+                };
+                const roleClass = roleColors[u.role] || roleColors['user'];
+
+                let bankInfo = '<span class="text-slate-400 italic text-[10px]">Belum diatur</span>';
+                if(u.bankName || u.bankNo) {
+                    bankInfo = `<div class="bg-brand/5 p-2 rounded-lg border border-brand/10 text-[10px]">
+                        <p class="font-black text-brand uppercase">${u.bankName || '???'}</p>
+                        <p class="font-mono font-bold text-slate-700 dark:text-white">${u.bankNo || '???'}</p>
+                        <p class="text-slate-500 italic opacity-60">a.n ${u.bankOwner || '???'}</p>
+                    </div>`;
+                }
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors border-b border-white/10 dark:border-slate-700/30">
+                        <td class="px-6 py-4">
+                            <p class="font-bold text-slate-800 dark:text-white text-base leading-tight">${u.name}</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">${u.email}</p>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-1 text-xs font-bold text-brand bg-brand/5 px-2 py-1 rounded-lg w-max border border-brand/10">
+                                <i class="ph ph-whatsapp-logo text-green-500 text-sm"></i> ${u.wa || '-'}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">${bankInfo}</td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="${roleClass} px-3 py-1 rounded-lg text-xs font-black uppercase">${u.role}</span>
+                        </td>
+                        <td class="px-6 py-4 font-mono text-xs text-brand font-bold">${u.affiliateCode || u.license || '-'}</td>
+                        <td class="px-6 py-4 text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                <button onclick="editUser('${u.id}')" class="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 rounded-xl transition-colors" title="Edit"><i class="ph ph-pencil-simple text-xl"></i></button>
+                                <button onclick="deleteUser('${u.id}')" class="p-2 text-red-600 dark:text-red-400 hover:bg-red-500/20 rounded-xl transition-colors" title="Delete"><i class="ph ph-trash text-xl"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        };
+
+        window.openUserModal = () => {
+            try {
+                const form = document.getElementById('userForm');
+                if(form) form.reset();
+                
+                const userIdInput = document.getElementById('userId');
+                if(userIdInput) userIdInput.value = '';
+                
+                const title = document.getElementById('userModalTitle');
+                if(title) title.innerText = 'Tambah User Baru';
+                
+                const pwdContainer = document.getElementById('userPasswordContainer');
+                if(pwdContainer) pwdContainer.classList.remove('hidden');
+                
+                const pwdInput = document.getElementById('userPassword');
+                if(pwdInput) pwdInput.required = true;
+                
+                const modal = document.getElementById('userModal');
+                if(modal) modal.classList.remove('hidden');
+            } catch (e) {
+                console.error("Gagal membuka Modal User: ", e);
+            }
+        };
+
+        window.closeUserModal = () => {
+            try {
+                const modal = document.getElementById('userModal');
+                if(modal) modal.classList.add('hidden');
+            } catch (e) {
+                console.error(e);
+            }
+        };
+
+        window.saveUser = async () => {
+            try {
+                let idEl = document.getElementById('userId');
+                let id = idEl ? idEl.value : '';
+                
+                const name = document.getElementById('userName')?.value || '';
+                const email = document.getElementById('userEmail')?.value || '';
+                const rawWa = document.getElementById('userWa')?.value || '';
+                const wa = window.formatPhoneNumber(rawWa);
+                const role = document.getElementById('userRole')?.value || 'user';
+                const rawPass = document.getElementById('userPassword')?.value || '';
+
+                if(!name || !email) {
+                    showToast("Nama dan Email wajib diisi", "error");
+                    return;
+                }
+
+                let payload = { id, name, email, wa, role };
+
+                if (id) { 
+                    if (rawPass) {
+                        payload.password = await window.hashPassword(rawPass);
+                    }
+                } else { 
+                    if (!rawPass) {
+                        showToast("Password wajib diisi untuk user baru", "error");
+                        return;
+                    }
+                    payload.password = await window.hashPassword(rawPass);
+                    payload.license = role.toUpperCase() + '-' + Math.floor(Math.random() * 9999);
+                    payload.affiliateCode = name.replace(/\s+/g, '').toUpperCase().substring(0, 5) + Math.floor(Math.random()*1000);
+                }
+
+                await apiCall('saveUser', payload);
+                showToast("Data user berhasil disimpan!");
+                await loadAllData();
+                window.closeUserModal();
+            } catch (e) {
+                showToast(e.message, "error");
+            }
+        };
+
+        window.editUser = (id) => {
+            try {
+                const u = window.appState.usersData.find(x => String(x.id) === String(id));
+                if(!u) return;
+                
+                if(document.getElementById('userModalTitle')) document.getElementById('userModalTitle').innerText = 'Edit User';
+                if(document.getElementById('userId')) document.getElementById('userId').value = u.id;
+                if(document.getElementById('userName')) document.getElementById('userName').value = u.name;
+                if(document.getElementById('userEmail')) document.getElementById('userEmail').value = u.email;
+                if(document.getElementById('userWa')) document.getElementById('userWa').value = u.wa || '';
+                if(document.getElementById('userRole')) document.getElementById('userRole').value = u.role || 'user';
+                
+                const pwdInput = document.getElementById('userPassword');
+                if(pwdInput) {
+                    pwdInput.value = '';
+                    pwdInput.required = false;
+                }
+                
+                const modal = document.getElementById('userModal');
+                if(modal) modal.classList.remove('hidden');
+            } catch (e) {
+                console.error("Gagal membuka form Edit User: ", e);
+            }
+        };
+
+        window.deleteUser = async (id) => {
+            if(confirm("Hapus user ini?")) {
+                try {
+                    await apiCall('deleteUser', {id});
+                    showToast("User dihapus.");
+                    await loadAllData();
+                } catch (e) {
+                    showToast(e.message, "error");
+                }
+            }
+        };
+
+        // --- AFFILIATE SYSTEM LOGIC ---
+        window.renderAffiliateList = () => {
+            const userView = document.getElementById('userAffiliateView');
+            const adminView = document.getElementById('adminAffiliateView');
+            const titleEl = document.getElementById('affiliateTitle');
+            const subtitleEl = document.getElementById('affiliateSubtitle');
+            
+            if(!window.appState.user) return;
+
+            if (window.appState.user.role === 'admin') {
+                // TAMPILAN ADMIN: Kelola Pencairan Payout
+                if(userView) userView.classList.add('hidden');
+                if(adminView) adminView.classList.remove('hidden');
+                if(titleEl) titleEl.innerText = "Kelola Pencairan Komisi";
+                if(subtitleEl) subtitleEl.innerText = "Daftar komisi affiliate yang belum dibayarkan.";
+                
+                renderAdminPayoutTable();
+            } else {
+                // TAMPILAN USER / AGENCY: Dashboard Affiliate
+                if(adminView) adminView.classList.add('hidden');
+                if(userView) userView.classList.remove('hidden');
+                if(titleEl) titleEl.innerText = "Affiliate Dashboard";
+                if(subtitleEl) subtitleEl.innerText = "Kelola link affiliate dan komisi Anda.";
+
+                renderUserAffiliateDashboard();
+            }
+        };
+
+        window.renderUserAffiliateDashboard = () => {
+            const container = document.getElementById('affiliateProductsList');
+            const refCodeEl = document.getElementById('affiliateRefCode');
+            if(!container) return;
+            
+            container.innerHTML = '';
+            const user = window.appState.user;
+            const refId = user.affiliateCode || user.id.substring(0, 8).toUpperCase();
+            if(refCodeEl) refCodeEl.innerText = refId;
+
+            let totalSales = 0;
+            let unpaidCommission = 0;
+            let paidCommission = 0;
+            
+            const affiliateOrders = window.appState.orders.filter(o => String(o.affiliateRef) === String(refId) && o.status === 'Paid');
+            totalSales = affiliateOrders.length;
+            
+            affiliateOrders.forEach(o => {
+                const prod = window.appState.products.find(p => String(p.id) === String(o.productId));
+                if(prod && prod.commissionValue) {
+                    let komisiItem = 0;
+                    if(prod.commissionType === 'percent') {
+                        komisiItem = o.basePrice * (Number(prod.commissionValue) / 100);
+                    } else {
+                        komisiItem = Number(prod.commissionValue);
+                    }
+                    
+                    if(o.affiliatePayoutStatus === 'Paid') {
+                        paidCommission += komisiItem;
+                    } else {
+                        unpaidCommission += komisiItem;
+                    }
+                }
+            });
+
+            const tsEl = document.getElementById('affTotalSales');
+            if(tsEl) tsEl.innerText = totalSales;
+            const tuEl = document.getElementById('affUnpaidCommission');
+            if(tuEl) tuEl.innerText = window.formatRp(unpaidCommission);
+            const tpEl = document.getElementById('affPaidCommission');
+            if(tpEl) tpEl.innerText = window.formatRp(paidCommission);
+            
+            if(user.bankName) {
+                const bN = document.getElementById('affBankName');
+                if(bN) bN.value = user.bankName;
+            }
+            if(user.bankNo) {
+                const bNo = document.getElementById('affBankNo');
+                if(bNo) bNo.value = user.bankNo;
+            }
+            if(user.bankOwner) {
+                const bOw = document.getElementById('affBankOwner');
+                if(bOw) bOw.value = user.bankOwner;
+            }
+
+            if(window.appState.products.length === 0) {
+                container.innerHTML = `<p class="col-span-full text-slate-500 font-bold text-center py-10">Belum ada produk aktif.</p>`;
+                return;
+            }
+
+            window.appState.products.forEach(p => {
+                const currentPath = window.location.origin + window.location.pathname;
+                
+                const affCheckoutLink = `${currentPath}?checkout=${p.id}&ref=${refId}`;
+                
+                let affSalespageLink = p.salesPageUrl ? 
+                    `${p.salesPageUrl}${p.salesPageUrl.includes('?') ? '&' : '?'}ref=${refId}` : 
+                    affCheckoutLink;
+
+                let commInfo = p.commissionType === 'percent' ? `${p.commissionValue}%` : window.formatRp(p.commissionValue);
+
+                container.innerHTML += `
+                    <div class="glass rounded-2xl p-5 border border-white/40 dark:border-slate-700/50 flex flex-col hover:shadow-xl transition-shadow">
+                        <h4 class="font-black text-slate-800 dark:text-white mb-2 text-lg truncate" title="${p.title}">${p.title}</h4>
+                        <div class="bg-orange-500/10 border border-orange-500/20 px-3 py-2 rounded-lg mb-4 flex items-center justify-between">
+                            <span class="text-xs font-bold text-orange-600 dark:text-orange-400">Komisi per Sale:</span>
+                            <span class="text-sm font-black text-orange-600 dark:text-orange-400">${commInfo}</span>
+                        </div>
+                        <div class="mt-auto space-y-4">
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase mb-1 ml-1">Link Landing Page</label>
+                                <div class="flex gap-2">
+                                    <input type="text" readonly value="${affSalespageLink}" class="flex-1 px-3 py-2 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg text-xs outline-none">
+                                    <button onclick="copyTextToClipboard('${affSalespageLink}')" class="bg-slate-800 text-white p-2 rounded-xl"><i class="ph ph-copy"></i></button>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-brand uppercase mb-1 ml-1">Link Checkout Langsung</label>
+                                <div class="flex gap-2">
+                                    <input type="text" readonly value="${affCheckoutLink}" class="flex-1 px-3 py-2 bg-brand/5 border border-brand/20 rounded-xl text-[11px] font-bold text-brand outline-none">
+                                    <button onclick="copyTextToClipboard('${affCheckoutLink}')" class="bg-brand text-white p-2 rounded-xl shadow-lg shadow-brand/30 transition-transform active:scale-95">
+                                        <i class="ph ph-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        };
+
+        window.renderAdminPayoutTable = () => {
+            const tbody = document.getElementById('payoutTableBody');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+
+            // Hitung komisi pending per affiliate
+            let payoutMap = {}; 
+            
+            window.appState.orders.forEach(o => {
+                if (o.status === 'Paid' && o.affiliateRef && o.affiliatePayoutStatus !== 'Paid') {
+                    const prod = window.appState.products.find(p => String(p.id) === String(o.productId));
+                    const affUser = window.appState.usersData.find(u => u.affiliateCode === o.affiliateRef || String(u.id) === String(o.affiliateRef));
+                    
+                    if(prod && affUser) {
+                        let komisiItem = 0;
+                        if(prod.commissionType === 'percent') {
+                            komisiItem = o.basePrice * (Number(prod.commissionValue) / 100);
+                        } else {
+                            komisiItem = Number(prod.commissionValue);
+                        }
+
+                        if (!payoutMap[affUser.id]) {
+                            payoutMap[affUser.id] = {
+                                user: affUser,
+                                totalPending: 0
+                            };
+                        }
+                        payoutMap[affUser.id].totalPending += komisiItem;
+                    }
+                }
+            });
+
+            const pendingAffiliates = Object.values(payoutMap).filter(item => item.totalPending > 0);
+
+            if(pendingAffiliates.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-10 text-center text-slate-500 font-bold">Semua komisi sudah terbayar / belum ada komisi pending.</td></tr>`;
+                return;
+            }
+
+            pendingAffiliates.forEach(item => {
+                const u = item.user;
+                let bankInfo = '<span class="text-red-500 font-bold text-xs"><i class="ph ph-warning-circle"></i> Rekening belum diset</span>';
+                if(u.bankName || u.bankNo) {
+                    bankInfo = `<div class="bg-brand/5 p-2 rounded-lg border border-brand/10 text-[10px]">
+                        <p class="font-black text-brand uppercase">${u.bankName || '???'}</p>
+                        <p class="font-mono font-bold text-slate-700 dark:text-white">${u.bankNo || '???'}</p>
+                        <p class="text-slate-500 italic opacity-60">a.n ${u.bankOwner || '???'}</p>
+                    </div>`;
+                }
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors border-b border-white/10 dark:border-slate-700/30">
+                        <td class="px-6 py-4">
+                            <p class="font-bold text-slate-800 dark:text-white text-base">${u.name}</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">${u.wa || u.email}</p>
+                        </td>
+                        <td class="px-6 py-4">${bankInfo}</td>
+                        <td class="px-6 py-4 font-black text-orange-500 text-base">${window.formatRp(item.totalPending)}</td>
+                        <td class="px-6 py-4 text-right">
+                            <button onclick="processPayout('${u.id}')" class="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-md shadow-green-500/30 transition-all flex items-center gap-1 justify-end ml-auto">
+                                <i class="ph ph-check-circle text-base"></i> Tandai Sudah Ditransfer
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        };
+
+        window.processPayout = async (affiliateId) => {
+            if(confirm("Tandai komisi affiliate ini sudah ditransfer? Ini akan mengubah status semua orderannya menjadi Paid dan mengirim notifikasi ke Affiliate.")) {
+                try {
+                    showToast("Memproses pencairan...", "info");
+                    await apiCall('payAffiliate', { affiliateId: affiliateId });
+                    showToast("Pencairan berhasil dicatat & Notif dikirim!", "success");
+                    await loadAllData();
+                } catch(e) {
+                    showToast(e.message, "error");
+                }
+            }
+        };
+
+        window.saveUserBank = async (e) => {
+            e.preventDefault();
+            const bName = document.getElementById('affBankName').value;
+            const bNo = document.getElementById('affBankNo').value;
+            const bOwner = document.getElementById('affBankOwner').value;
+
+            if(!window.appState.user) return;
+            const payload = {
+                id: window.appState.user.id,
+                bankName: bName, bankNo: bNo, bankOwner: bOwner
+            };
+
+            try {
+                await apiCall('saveUser', payload);
+                window.appState.user.bankName = bName;
+                window.appState.user.bankNo = bNo;
+                window.appState.user.bankOwner = bOwner;
+                localStorage.setItem('iMersUser', JSON.stringify(window.appState.user));
+                showToast("Rekening pencairan berhasil disimpan!", "success");
+            } catch(err) {
+                showToast("Error saving bank: " + err.message, "error");
+            }
+        };
+
+        window.copyTextToClipboard = (text) => {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => showToast("Link disalin!"));
+            } else {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand("copy");
+                textArea.remove();
+                showToast("Link disalin!");
+            }
+        };
+
+        // --- NOTIFICATION TEMPLATES LOGIC ---
+        window.renderTemplatesTable = () => {
+            const tbody = document.getElementById('templatesTableBody');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+
+            if(window.appState.templates.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-10 text-center text-slate-500 font-bold">Data template kosong.</td></tr>`;
+                return;
+            }
+
+            window.appState.templates.forEach(t => {
+                const isActiveEmail = t.isActiveEmail === true || t.isActiveEmail === 'true';
+                const isActiveWA = t.isActiveWA === true || t.isActiveWA === 'true';
+
+                const badgeEmail = isActiveEmail 
+                    ? `<span class="bg-green-500/20 text-green-700 dark:text-green-400 px-3 py-1 rounded-lg text-xs font-black uppercase inline-flex items-center gap-1"><i class="ph ph-check-circle"></i> On</span>`
+                    : `<span class="bg-slate-500/20 text-slate-700 dark:text-slate-400 px-3 py-1 rounded-lg text-xs font-black uppercase inline-flex items-center gap-1"><i class="ph ph-minus-circle"></i> Off</span>`;
+                
+                const badgeWA = isActiveWA 
+                    ? `<span class="bg-green-500/20 text-green-700 dark:text-green-400 px-3 py-1 rounded-lg text-xs font-black uppercase inline-flex items-center gap-1"><i class="ph ph-check-circle"></i> On</span>`
+                    : `<span class="bg-slate-500/20 text-slate-700 dark:text-slate-400 px-3 py-1 rounded-lg text-xs font-black uppercase inline-flex items-center gap-1"><i class="ph ph-minus-circle"></i> Off</span>`;
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors">
+                        <td class="px-6 py-4">
+                            <p class="font-black text-slate-800 dark:text-white text-sm mb-1">${t.title}</p>
+                            <p class="font-mono text-xs text-brand font-bold uppercase tracking-wider">${t.type}</p>
+                        </td>
+                        <td class="px-6 py-4 text-sm font-medium text-slate-600 dark:text-slate-400 truncate max-w-[200px]">${t.subject}</td>
+                        <td class="px-6 py-4 text-center">${badgeEmail}</td>
+                        <td class="px-6 py-4 text-center">${badgeWA}</td>
+                        <td class="px-6 py-4 text-right">
+                            <button onclick="editTemplate('${t.id}')" class="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 rounded-xl transition-colors" title="Edit"><i class="ph ph-pencil-simple text-xl"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        };
+
+        window.editTemplate = (id) => {
+            try {
+                const template = window.appState.templates.find(t => String(t.id) === String(id));
+                if(!template) return;
+                
+                if(document.getElementById('tmplId')) document.getElementById('tmplId').value = template.id;
+                if(document.getElementById('tmplType')) document.getElementById('tmplType').value = template.type;
+                if(document.getElementById('tmplTitle')) document.getElementById('tmplTitle').value = template.title;
+                if(document.getElementById('tmplSubject')) document.getElementById('tmplSubject').value = template.subject || '';
+                if(document.getElementById('tmplEmailBody')) document.getElementById('tmplEmailBody').value = template.messageEmail || '';
+                if(document.getElementById('tmplWABody')) document.getElementById('tmplWABody').value = template.messageWA || '';
+                
+                if(document.getElementById('tmplActiveEmail')) document.getElementById('tmplActiveEmail').checked = (template.isActiveEmail === true || template.isActiveEmail === 'true');
+                if(document.getElementById('tmplActiveWA')) document.getElementById('tmplActiveWA').checked = (template.isActiveWA === true || template.isActiveWA === 'true');
+                
+                const tModal = document.getElementById('templateModal');
+                if (tModal) tModal.classList.remove('hidden');
+            } catch (e) {
+                console.error("Error editing template: ", e);
+            }
+        };
+
+        window.closeTemplateModal = () => {
+            const tModal = document.getElementById('templateModal');
+            if (tModal) tModal.classList.add('hidden');
+        };
+
+        window.saveTemplate = async () => {
+            let id = document.getElementById('tmplId')?.value || '';
+            
+            const type = document.getElementById('tmplType')?.value || '';
+            const title = document.getElementById('tmplTitle')?.value || '';
+            const subject = document.getElementById('tmplSubject')?.value || '';
+            const emailBody = document.getElementById('tmplEmailBody')?.value || '';
+            const waBody = document.getElementById('tmplWABody')?.value || '';
+            const activeEmail = document.getElementById('tmplActiveEmail')?.checked || false;
+            const activeWA = document.getElementById('tmplActiveWA')?.checked || false;
+
+            if(!title) {
+                showToast("Judul Template wajib diisi", "error");
+                return;
+            }
+
+            try {
+                const payload = {
+                    id: id, type: type, title: title, subject: subject, messageEmail: emailBody, messageWA: waBody,
+                    isActiveEmail: activeEmail, isActiveWA: activeWA
+                };
+                
+                await apiCall('saveTemplate', payload);
+                showToast("Template Notifikasi diperbarui!");
+                await loadAllData();
+                closeTemplateModal();
+            } catch (e) {
+                showToast("Error: " + e.message, "error");
+            }
+        };
+
+        // --- PRODUCT CRUD LOGIC ---
+
+        window.renderProductsTable = () => {
+            const tbody = document.getElementById('productsTableBody');
+            if(!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            if(window.appState.products.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-10 text-center text-slate-500 font-bold">No products found. Add one above.</td></tr>`;
+                return;
+            }
+
+            window.appState.products.forEach(p => {
+                const typeLabel = p.type === 'lms' 
+                    ? `<span class="bg-indigo-500/20 text-indigo-700 dark:text-indigo-400 px-3 py-1 rounded-lg text-xs font-black uppercase"><i class="ph ph-video"></i> LMS Course</span>`
+                    : `<span class="bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-3 py-1 rounded-lg text-xs font-black uppercase"><i class="ph ph-download-simple"></i> Download</span>`;
+                
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors";
+                tr.innerHTML = `
+                    <td class="px-6 py-4">
+                        <p class="font-bold text-slate-800 dark:text-white text-base leading-tight">${p.title}</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 w-48 truncate font-medium mt-1" title="${p.description}">${p.description || ''}</p>
+                    </td>
+                    <td class="px-6 py-4">${typeLabel}</td>
+                    <td class="px-6 py-4 font-black text-brand dark:text-brandHover">${window.formatRp(p.price)}</td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="flex items-center justify-end gap-3">
+                            <button onclick="editProduct('${p.id}')" class="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 rounded-xl transition-colors" title="Edit"><i class="ph ph-pencil-simple text-xl"></i></button>
+                            <button onclick="duplicateProduct('${p.id}')" class="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-500/20 rounded-xl transition-colors" title="Duplicate"><i class="ph ph-copy text-xl"></i></button>
+                            <button onclick="deleteProduct('${p.id}')" class="p-2 text-red-600 dark:text-red-400 hover:bg-red-500/20 rounded-xl transition-colors" title="Delete"><i class="ph ph-trash text-xl"></i></button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        };
+
+        window.openProductModal = () => {
+            try {
+                const pf = document.getElementById('productForm');
+                if (pf) pf.reset();
+                if(document.getElementById('prodId')) document.getElementById('prodId').value = '';
+                if(document.getElementById('productModalTitle')) document.getElementById('productModalTitle').innerText = 'Add New Product';
+                if(document.getElementById('checkoutLinkContainer')) document.getElementById('checkoutLinkContainer').classList.add('hidden');
+                
+                if(document.getElementById('downloadsContainer')) document.getElementById('downloadsContainer').innerHTML = '';
+                if(document.getElementById('lessonsContainer')) document.getElementById('lessonsContainer').innerHTML = '';
+                
+                window.addDownloadField(); 
+                window.addLessonField();
+                window.toggleProductFields();
+                
+                const modal = document.getElementById('productModal');
+                if (modal) modal.classList.remove('hidden');
+            } catch (e) {
+                console.error("Error openProductModal: ", e);
+            }
+        };
+
+        window.closeProductModal = () => {
+            const modal = document.getElementById('productModal');
+            if (modal) modal.classList.add('hidden');
+        };
+
+        window.toggleProductFields = () => {
+            const typeEl = document.getElementById('prodType');
+            if (!typeEl) return;
+            const type = typeEl.value;
+            if(type === 'lms') {
+                if(document.getElementById('fieldLMS')) document.getElementById('fieldLMS').classList.remove('hidden');
+                if(document.getElementById('fieldDownload')) document.getElementById('fieldDownload').classList.add('hidden');
+            } else {
+                if(document.getElementById('fieldLMS')) document.getElementById('fieldLMS').classList.add('hidden');
+                if(document.getElementById('fieldDownload')) document.getElementById('fieldDownload').classList.remove('hidden');
+            }
+        };
+
+        window.addDownloadField = (title = '', url = '') => {
+            const container = document.getElementById('downloadsContainer');
+            if (!container) return;
+            const div = document.createElement('div');
+            div.className = "flex gap-3 items-center dl-item bg-white/50 dark:bg-slate-900/50 p-3 rounded-xl border border-white/40 dark:border-slate-700/50";
+            div.innerHTML = `
+                <div class="flex-1 space-y-3">
+                    <input type="text" placeholder="Nama Tombol (mis: Download Ebook)" value="${title}" class="dl-title w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 dark:bg-slate-800 rounded-lg outline-none focus:border-brand font-bold dark:text-white">
+                    <input type="url" placeholder="URL Link (mis: https://drive.google.com/...)" value="${url}" class="dl-url w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 dark:bg-slate-800 rounded-lg outline-none focus:border-brand dark:text-white">
+                </div>
+                <button type="button" onclick="this.parentElement.remove()" class="text-red-500 hover:bg-red-500/20 p-3 rounded-xl transition-colors"><i class="ph ph-trash text-2xl"></i></button>
+            `;
+            container.appendChild(div);
+        };
+
+        window.addLessonField = (title = '', url = '') => {
+            const container = document.getElementById('lessonsContainer');
+            if (!container) return;
+            const div = document.createElement('div');
+            div.className = "flex gap-3 items-center lesson-item bg-white/50 dark:bg-slate-900/50 p-3 rounded-xl border border-white/40 dark:border-slate-700/50";
+            div.innerHTML = `
+                <div class="flex-1 space-y-3">
+                    <input type="text" placeholder="Judul Materi (mis: Bab 1 Pendahuluan)" value="${title}" class="lesson-title w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 dark:bg-slate-800 rounded-lg outline-none focus:border-brand font-bold dark:text-white">
+                    <input type="url" placeholder="YouTube URL (mis: https://www.youtube.com/watch?v=...)" value="${url}" class="lesson-url w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 dark:bg-slate-800 rounded-lg outline-none focus:border-brand dark:text-white">
+                </div>
+                <button type="button" onclick="this.parentElement.remove()" class="text-red-500 hover:bg-red-500/20 p-3 rounded-xl transition-colors"><i class="ph ph-trash text-2xl"></i></button>
+            `;
+            container.appendChild(div);
+        };
+
+        window.copyCheckoutLink = () => {
+            const input = document.getElementById('prodCheckoutUrl');
+            if(!input) return;
+            input.select();
+            document.execCommand('copy');
+            showToast("Checkout Link Berhasil Disalin!");
+        };
+
+        window.saveProduct = async () => {
+            try {
+                let idEl = document.getElementById('prodId');
+                let id = idEl ? idEl.value : '';
+                
+                const type = document.getElementById('prodType')?.value || 'download';
+                const title = document.getElementById('prodTitle')?.value || '';
+                const price = Number(document.getElementById('prodPrice')?.value || 0);
+                const desc = document.getElementById('prodDesc')?.value || '';
+                const accessHtml = document.getElementById('prodAccess')?.value || '';
+                const salesPageUrl = document.getElementById('prodSalesPage')?.value || '';
+                const salesPageHtml = document.getElementById('prodSalesPageHtml')?.value || '';
+                const commissionType = document.getElementById('prodCommType')?.value || 'percent';
+                const commissionValue = document.getElementById('prodCommValue')?.value || '';
+                
+                let finalImageUrl = document.getElementById('prodImageUrl')?.value || '';
+                const prodImageFile = document.getElementById('prodImageFile')?.files[0];
+                if (prodImageFile) {
+                    finalImageUrl = await window.compressImage(prodImageFile, 600);
+                }
+                
+                if(!title || !price) {
+                    showToast("Title and Price are required", "error");
+                    return;
+                }
+
+                let data = { id, type, title, price, description: desc, accessHtml, salesPageUrl, salesPageHtml, commissionType, commissionValue, imageUrl: finalImageUrl, createdAt: Date.now() };
+
+                if (type === 'download') {
+                    let files = [];
+                    document.querySelectorAll('.dl-item').forEach(el => {
+                        const lTitle = el.querySelector('.dl-title').value;
+                        const lUrl = el.querySelector('.dl-url').value;
+                        if(lTitle || lUrl) files.push({ title: lTitle, url: lUrl });
+                    });
+                    data.files = files;
+                } else {
+                    let lessons = [];
+                    document.querySelectorAll('.lesson-item').forEach(el => {
+                        const lTitle = el.querySelector('.lesson-title').value;
+                        const lUrl = el.querySelector('.lesson-url').value;
+                        if(lTitle || lUrl) lessons.push({ title: lTitle, url: lUrl });
+                    });
+                    data.lessons = lessons;
+                }
+
+                await apiCall('saveProduct', data);
+                showToast("Product saved!");
+                await loadAllData();
+                window.closeProductModal();
+            } catch (error) {
+                showToast("Error saving product: " + error.message, "error");
+            }
+        };
+
+        window.editProduct = (id) => {
+            try {
+                const product = window.appState.products.find(p => String(p.id) === String(id));
+                if(!product) return;
+
+                if(document.getElementById('productModalTitle')) document.getElementById('productModalTitle').innerText = 'Edit Product';
+                if(document.getElementById('prodId')) document.getElementById('prodId').value = product.id;
+                if(document.getElementById('prodTitle')) document.getElementById('prodTitle').value = product.title;
+                if(document.getElementById('prodPrice')) document.getElementById('prodPrice').value = product.price;
+                if(document.getElementById('prodType')) document.getElementById('prodType').value = product.type;
+                if(document.getElementById('prodDesc')) document.getElementById('prodDesc').value = product.description || '';
+                if(document.getElementById('prodAccess')) document.getElementById('prodAccess').value = product.accessHtml || '';
+                
+                if(document.getElementById('prodSalesPage')) document.getElementById('prodSalesPage').value = product.salesPageUrl || '';
+                if(document.getElementById('prodSalesPageHtml')) document.getElementById('prodSalesPageHtml').value = product.salesPageHtml || '';
+                if(document.getElementById('prodCommType')) document.getElementById('prodCommType').value = product.commissionType || 'percent';
+                if(document.getElementById('prodCommValue')) document.getElementById('prodCommValue').value = product.commissionValue || '';
+                
+                if(document.getElementById('prodImageUrl')) document.getElementById('prodImageUrl').value = product.imageUrl || '';
+                if(document.getElementById('prodImageFile')) document.getElementById('prodImageFile').value = '';
+                
+                if(document.getElementById('downloadsContainer')) document.getElementById('downloadsContainer').innerHTML = '';
+                if(document.getElementById('lessonsContainer')) document.getElementById('lessonsContainer').innerHTML = '';
+
+                if (product.type === 'download') {
+                    if(product.files && product.files.length > 0) {
+                        product.files.forEach(f => window.addDownloadField(f.title, f.url));
+                    } else { window.addDownloadField(); }
+                } else {
+                    if(product.lessons && product.lessons.length > 0) {
+                        product.lessons.forEach(l => window.addLessonField(l.title, l.url));
+                    } else { window.addLessonField(); }
+                }
+                
+                window.toggleProductFields();
+
+                const checkoutUrl = window.location.origin + window.location.pathname + "?checkout=" + product.id;
+                if(document.getElementById('prodCheckoutUrl')) document.getElementById('prodCheckoutUrl').value = checkoutUrl;
+                if(document.getElementById('checkoutLinkContainer')) document.getElementById('checkoutLinkContainer').classList.remove('hidden');
+
+                const modal = document.getElementById('productModal');
+                if (modal) modal.classList.remove('hidden');
+            } catch (e) {
+                console.error("Error editing product: ", e);
+            }
+        };
+
+        window.deleteProduct = async (id) => {
+            if(confirm("Are you sure you want to delete this product?")) {
+                try {
+                    await apiCall('deleteProduct', {id: id});
+                    showToast("Product deleted");
+                    await loadAllData();
+                } catch(err) {
+                    showToast("Error deleting: " + err.message, "error");
+                }
+            }
+        };
+
+        window.duplicateProduct = async (id) => {
+            const product = window.appState.products.find(p => String(p.id) === String(id));
+            if(!product) return;
+            
+            const newData = JSON.parse(JSON.stringify(product));
+            newData.id = ""; 
+            newData.title = newData.title + " (Copy)";
+
+            try {
+                await apiCall('saveProduct', newData);
+                showToast("Produk berhasil di-copy!");
+                await loadAllData();
+            } catch(err) {
+                showToast("Error duplicating: " + err.message, "error");
+            }
+        };
+
+        // --- COUPONS CRUD LOGIC (KHUSUS MASTER & AFFILIATE) ---
+
+        window.renderCouponsTable = () => {
+            const tbody = document.getElementById('couponsTableBody');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+
+            const isUserAdmin = window.appState.user.role === 'admin';
+            // Admin bisa liat semua, Affiliate cuma bisa liat kupon punya dia
+            const filteredCoupons = isUserAdmin ? window.appState.coupons : window.appState.coupons.filter(c => String(c.createdBy) === String(window.appState.user.id));
+
+            if(filteredCoupons.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-10 text-center text-slate-500 font-bold">Belum ada kupon. Buat kupon pertama Anda.</td></tr>`;
+                return;
+            }
+
+            filteredCoupons.forEach(c => {
+                const typeLabel = c.type === 'percent' ? 'Persentase (%)' : 'Nominal (Rp)';
+                const valueLabel = c.type === 'percent' ? `${c.value}%` : window.formatRp(c.value);
+                
+                let applicableLabel = '<span class="bg-blue-500/20 text-blue-700 dark:text-blue-400 px-3 py-1 rounded-lg text-xs font-black uppercase">Semua Produk</span>';
+                if (c.applicableProductId && c.applicableProductId !== 'all') {
+                    const prod = window.appState.products.find(p => String(p.id) === String(c.applicableProductId));
+                    applicableLabel = prod 
+                        ? `<span class="bg-slate-500/20 text-slate-700 dark:text-slate-300 px-3 py-1 rounded-lg text-xs font-bold border border-white/20 dark:border-slate-700" title="${prod.title}">${prod.title.substring(0, 20)}${prod.title.length > 20 ? '...' : ''}</span>` 
+                        : '<span class="text-red-500 text-xs font-black uppercase">Produk Dihapus</span>';
+                }
+
+                // Visual pembeda antara Master (buatan Admin) dan Affiliate (buatan user)
+                let isMaster = c.createdBy === 'admin' || !c.createdBy;
+                let masterBadge = isMaster 
+                    ? `<span class="bg-purple-500/20 text-purple-700 dark:text-purple-400 px-2 py-0.5 rounded text-[10px] font-bold uppercase ml-2 align-middle">Master</span>` 
+                    : `<span class="bg-slate-500/20 text-slate-700 dark:text-slate-400 px-2 py-0.5 rounded text-[10px] font-bold uppercase ml-2 align-middle">Affiliate</span>`;
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors border-b border-white/10 dark:border-slate-700/30">
+                        <td class="px-6 py-4 font-mono font-black text-brand dark:text-brandHover text-base">${c.code} ${masterBadge}</td>
+                        <td class="px-6 py-4 font-medium text-slate-700 dark:text-slate-300">${typeLabel}</td>
+                        <td class="px-6 py-4 font-black text-slate-800 dark:text-white">${valueLabel}</td>
+                        <td class="px-6 py-4">${applicableLabel}</td>
+                        <td class="px-6 py-4 text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                <button onclick="editCoupon('${c.id}')" class="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 rounded-xl transition-colors" title="Edit"><i class="ph ph-pencil-simple text-xl"></i></button>
+                                <button onclick="deleteCoupon('${c.id}')" class="p-2 text-red-600 dark:text-red-400 hover:bg-red-500/20 rounded-xl transition-colors" title="Delete"><i class="ph ph-trash text-xl"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        };
+
+        window.populateCouponProductSelect = (selectedId = 'all') => {
+            const select = document.getElementById('couponProductId');
+            if(!select) return;
+            select.innerHTML = '<option value="all">Semua Produk</option>';
+            window.appState.products.forEach(p => {
+                const option = document.createElement('option');
+                option.value = p.id;
+                option.innerText = p.title;
+                if (String(p.id) === String(selectedId)) option.selected = true;
+                select.appendChild(option);
+            });
+        };
+
+        window.openCouponModal = () => {
+            try {
+                const f = document.getElementById('couponForm');
+                if(f) f.reset();
+                if(document.getElementById('couponId')) document.getElementById('couponId').value = '';
+                if(document.getElementById('couponModalTitle')) document.getElementById('couponModalTitle').innerText = 'Tambah Kupon';
+                
+                const isAdmin = window.appState.user.role === 'admin';
+                const adminConfig = document.getElementById('adminCouponConfig');
+                const affConfig = document.getElementById('affiliateCouponConfig');
+                const masterSelect = document.getElementById('masterCouponSelect');
+
+                if (isAdmin) {
+                    if(adminConfig) adminConfig.classList.remove('hidden');
+                    if(affConfig) affConfig.classList.add('hidden');
+                    window.populateCouponProductSelect('all');
+                } else {
+                    if(adminConfig) adminConfig.classList.add('hidden');
+                    if(affConfig) affConfig.classList.remove('hidden');
+                    
+                    // Affiliate cuma bisa milih dari Master Kupon buatan admin
+                    if(masterSelect) {
+                        masterSelect.innerHTML = '';
+                        const masterCoupons = window.appState.coupons.filter(c => c.createdBy === 'admin' || !c.createdBy);
+                        if(masterCoupons.length === 0) {
+                            masterSelect.innerHTML = '<option value="">Belum ada Master Kupon dari Admin</option>';
+                        } else {
+                            masterSelect.innerHTML = '<option value="">-- Pilih Kupon Diskon --</option>';
+                            masterCoupons.forEach(mc => {
+                                const valLabel = mc.type === 'percent' ? `${mc.value}%` : window.formatRp(mc.value);
+                                masterSelect.innerHTML += `<option value="${mc.id}">${mc.code} (Diskon: ${valLabel})</option>`;
+                            });
+                        }
+                    }
+                }
+
+                const cModal = document.getElementById('couponModal');
+                if(cModal) cModal.classList.remove('hidden');
+            } catch (e) {
+                console.error("Error openCouponModal: ", e);
+            }
+        };
+
+        window.closeCouponModal = () => {
+            const cModal = document.getElementById('couponModal');
+            if(cModal) cModal.classList.add('hidden');
+        };
+
+        window.saveCoupon = async () => {
+            try {
+                let idEl = document.getElementById('couponId');
+                let id = idEl ? idEl.value : '';
+                
+                const code = document.getElementById('couponCode')?.value.toUpperCase().trim() || '';
+                const isAdmin = window.appState.user.role === 'admin';
+
+                if(!code) {
+                    showToast("Kode Kupon harus diisi", "error");
+                    return;
+                }
+
+                let data = { 
+                    id: id, 
+                    code: code,
+                    createdBy: window.appState.user.id,
+                    createdAt: Date.now()
+                };
+
+                // Jika Admin, simpan sesuai form angka manual.
+                if (isAdmin) {
+                    data.type = document.getElementById('couponType')?.value || 'percent';
+                    data.value = Number(document.getElementById('couponValue')?.value || 0);
+                    data.applicableProductId = document.getElementById('couponProductId')?.value || 'all';
+                    data.masterCouponId = '';
+                    data.createdBy = 'admin'; // paksa sebagai admin
+                    
+                    if(!data.value) {
+                        showToast("Nilai potongan harus diisi", "error");
+                        return;
+                    }
+                } 
+                // Jika User/Agency, Kloning nilai dari Master Kupon
+                else {
+                    const masterId = document.getElementById('masterCouponSelect')?.value || '';
+                    if (!masterId) {
+                        showToast("Pilih Master Kupon terlebih dahulu", "error");
+                        return;
+                    }
+                    
+                    const masterCoupon = window.appState.coupons.find(c => String(c.id) === String(masterId));
+                    if (!masterCoupon) {
+                        showToast("Master Kupon tidak valid", "error");
+                        return;
+                    }
+
+                    data.type = masterCoupon.type;
+                    data.value = masterCoupon.value;
+                    data.applicableProductId = masterCoupon.applicableProductId;
+                    data.masterCouponId = masterId;
+                }
+
+                await apiCall('saveCoupon', data);
+                showToast("Kupon tersimpan!");
+                await loadAllData();
+                window.closeCouponModal();
+            } catch (e) {
+                showToast("Error: " + e.message, "error");
+            }
+        };
+
+        window.editCoupon = (id) => {
+            try {
+                const coupon = window.appState.coupons.find(c => String(c.id) === String(id));
+                if(!coupon) return;
+
+                if(document.getElementById('couponModalTitle')) document.getElementById('couponModalTitle').innerText = 'Edit Kupon';
+                if(document.getElementById('couponId')) document.getElementById('couponId').value = coupon.id;
+                if(document.getElementById('couponCode')) document.getElementById('couponCode').value = coupon.code;
+                
+                const isAdmin = window.appState.user.role === 'admin';
+                const adminConfig = document.getElementById('adminCouponConfig');
+                const affConfig = document.getElementById('affiliateCouponConfig');
+                const masterSelect = document.getElementById('masterCouponSelect');
+
+                // Cek apakah admin mengedit kupon punya dia, atau Affiliate mengedit kuponnya sendiri
+                if (isAdmin || coupon.createdBy === 'admin' || !coupon.createdBy) {
+                    if(adminConfig) adminConfig.classList.remove('hidden');
+                    if(affConfig) affConfig.classList.add('hidden');
+                    if(document.getElementById('couponType')) document.getElementById('couponType').value = coupon.type;
+                    if(document.getElementById('couponValue')) document.getElementById('couponValue').value = coupon.value;
+                    window.populateCouponProductSelect(coupon.applicableProductId || 'all');
+                } else {
+                    if(adminConfig) adminConfig.classList.add('hidden');
+                    if(affConfig) affConfig.classList.remove('hidden');
+                    
+                    if(masterSelect) {
+                        masterSelect.innerHTML = '';
+                        const masterCoupons = window.appState.coupons.filter(c => c.createdBy === 'admin' || !c.createdBy);
+                        masterCoupons.forEach(mc => {
+                            const valLabel = mc.type === 'percent' ? `${mc.value}%` : window.formatRp(mc.value);
+                            const selected = String(mc.id) === String(coupon.masterCouponId) ? 'selected' : '';
+                            masterSelect.innerHTML += `<option value="${mc.id}" ${selected}>${mc.code} (Diskon: ${valLabel})</option>`;
+                        });
+                    }
+                }
+                
+                const cModal = document.getElementById('couponModal');
+                if(cModal) cModal.classList.remove('hidden');
+            } catch (e) {
+                console.error("Error editCoupon: ", e);
+            }
+        };
+
+        window.deleteCoupon = async (id) => {
+            if(confirm("Hapus kupon ini?")) {
+                try {
+                    await apiCall('deleteCoupon', {id});
+                    showToast("Kupon dihapus.");
+                    await loadAllData();
+                } catch(e) {
+                    console.error("Error deleteCoupon: ", e);
+                }
+            }
+        };
+
+        // --- MARKETPLACE LOGIC ---
+
+        function getYTVideoId(url) {
+            if(!url) return '';
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        window.renderMarketplaceList = () => {
+            const container = document.getElementById('marketplaceList');
+            if(!container) return;
+            
+            container.innerHTML = '';
+            const products = window.appState.products;
+
+            if(products.length === 0) {
+                container.innerHTML = `<p class="col-span-full text-slate-500 font-bold text-center py-10">Belum ada produk.</p>`;
+                return;
+            }
+            
+            const myOrders = window.appState.user ? window.appState.orders.filter(o => o.customerEmail === window.appState.user.email && o.status === 'Paid') : [];
+
+            products.forEach(course => {
+                const isLms = course.type === 'lms';
+                const icon = isLms ? 'ph-video' : 'ph-download-simple';
+                const typeLabel = isLms ? 'COURSE' : 'DOWNLOAD';
+                const colorFrom = isLms ? 'from-indigo-500' : 'from-emerald-500';
+                const colorTo = isLms ? 'to-purple-600' : 'to-teal-600';
+                
+                const hasBought = myOrders.some(o => String(o.productId) === String(course.id));
+                
+                let buttonHtml = '';
+                if(hasBought) {
+                    buttonHtml = `
+                        <button onclick="openProductAccess('${course.id}')" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-bold rounded-xl transition-all shadow-md shadow-emerald-500/30 flex justify-center items-center gap-2">
+                            Akses Produk <i class="ph ph-lock-key-open"></i>
+                        </button>
+                    `;
+                } else {
+                    const checkoutLink = "?checkout=" + course.id;
+                    buttonHtml = `
+                        <a href="${checkoutLink}" class="w-full py-3 bg-white/60 hover:bg-white dark:bg-slate-800/60 dark:hover:bg-slate-700 text-slate-800 dark:text-white text-sm font-bold rounded-xl transition-all border border-white/50 dark:border-slate-600 shadow-sm flex justify-center items-center gap-2 block text-center">
+                            Beli (${window.formatRp(course.price)}) <i class="ph ph-arrow-right"></i>
+                        </a>
+                    `;
+                }
+                
+                let salesPageBtn = '';
+                if (course.salesPageUrl) {
+                    salesPageBtn = `<a href="${course.salesPageUrl}" target="_blank" class="w-full py-2 mb-3 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 text-sm font-bold rounded-xl transition-all shadow-sm flex justify-center items-center gap-2 border border-blue-500/20"><i class="ph ph-storefront"></i> Lihat Info Lengkap</a>`;
+                } else if (course.salesPageHtml && course.salesPageHtml.trim() !== '') {
+                    salesPageBtn = `<button onclick="openSalesPageModal('${course.id}')" class="w-full py-2 mb-3 bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 text-sm font-bold rounded-xl transition-all shadow-sm flex justify-center items-center gap-2 border border-purple-500/20"><i class="ph ph-article"></i> Baca Salespage</button>`;
+                }
+                
+                const imageHtml = course.imageUrl 
+                    ? `<img src="${course.imageUrl}" alt="${course.title}" class="w-full h-full object-cover">` 
+                    : `<div class="absolute inset-0 bg-black/10"></div>
+                       <div class="absolute -right-6 -top-6 w-32 h-32 bg-white/20 rounded-full blur-2xl"></div>
+                       <i class="ph ${icon} text-6xl text-white/80 drop-shadow-md"></i>`;
+
+                container.innerHTML += `
+                    <div class="glass rounded-3xl overflow-hidden shadow-lg transition-all border border-white/40 dark:border-slate-700/50 flex flex-col">
+                        <div class="h-40 bg-gradient-to-br ${colorFrom} ${colorTo} flex items-center justify-center relative overflow-hidden shrink-0">
+                            ${imageHtml}
+                        </div>
+                        <div class="p-6 flex-1 flex flex-col bg-white/20 dark:bg-slate-900/20 backdrop-blur-sm">
+                            <span class="text-[10px] font-black ${isLms ? 'text-indigo-600 dark:text-indigo-400' : 'text-emerald-600 dark:text-emerald-400'} uppercase tracking-widest mb-2 block bg-white/50 dark:bg-slate-800/50 w-max px-2 py-1 rounded-md shadow-sm">${typeLabel}</span>
+                            <h3 class="font-black text-slate-800 dark:text-white mb-2 text-lg leading-tight">${course.title}</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mb-6 line-clamp-2 flex-1 font-medium">${course.description || 'No description'}</p>
+                            <div class="mt-auto">
+                                ${salesPageBtn}
+                                ${buttonHtml}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        };
+
+        window.openSalesPageModal = (id) => {
+            const product = window.appState.products.find(p => String(p.id) === String(id));
+            if(!product) return;
+            
+            document.getElementById('spModalContent').innerHTML = product.salesPageHtml || '<p class="text-center py-10">Salespage tidak tersedia.</p>';
+            
+            const refId = localStorage.getItem('affiliateRef') || (window.appState.user ? (window.appState.user.affiliateCode || window.appState.user.id.substring(0,8).toUpperCase()) : null);
+            let checkoutLink = "?checkout=" + product.id;
+            if (refId) checkoutLink += "&ref=" + refId;
+            
+            document.getElementById('spModalBuyBtn').href = checkoutLink;
+            document.getElementById('spModalBuyBtn').innerHTML = `Beli Sekarang (${window.formatRp(product.price)}) <i class="ph ph-arrow-right"></i>`;
+            
+            document.getElementById('salesPageModal').classList.remove('hidden');
+        };
+
+        window.closeSalesPageModal = () => {
+            document.getElementById('salesPageModal').classList.add('hidden');
+            document.getElementById('spModalContent').innerHTML = '';
+        };
+
+        window.openProductAccess = (id) => {
+            const product = window.appState.products.find(p => String(p.id) === String(id));
+            if(!product) return;
+
+            document.getElementById('marketplaceList').classList.add('hidden');
+            const viewer = document.getElementById('productViewer');
+            if(viewer) viewer.classList.remove('hidden');
+            
+            document.getElementById('pvTitle').innerText = product.title;
+
+            const structuredArea = document.getElementById('pvStructuredArea');
+            structuredArea.innerHTML = '';
+
+            if (product.type === 'download' && product.files && product.files.length > 0) {
+                let html = '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">';
+                product.files.forEach(f => {
+                    html += `
+                        <a href="${f.url}" target="_blank" class="flex items-center gap-4 bg-gradient-to-r from-emerald-500/10 to-teal-600/10 hover:from-emerald-500/20 hover:to-teal-600/20 text-emerald-700 dark:text-emerald-400 p-5 rounded-2xl border border-emerald-500/30 transition-all font-bold shadow-md hover:shadow-lg group">
+                            <div class="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
+                                <i class="ph ph-download-simple text-2xl"></i>
+                            </div>
+                            <span class="flex-1 text-sm">${f.title || 'Download File'}</span>
+                        </a>`;
+                });
+                html += '</div>';
+                structuredArea.innerHTML = html;
+            } 
+            else if (product.type === 'lms' && product.lessons && product.lessons.length > 0) {
+                structuredArea.innerHTML = `
+                    <div class="flex flex-col lg:flex-row gap-8">
+                        <div class="flex-1 bg-black rounded-3xl overflow-hidden aspect-video relative shadow-2xl border border-white/10">
+                            <iframe id="pvYtPlayer" class="w-full h-full absolute inset-0" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        </div>
+                        <div class="w-full lg:w-80 shrink-0 bg-white/40 dark:bg-slate-900/40 border border-white/50 dark:border-slate-700/50 rounded-3xl flex flex-col max-h-[500px] shadow-xl backdrop-blur-md overflow-hidden">
+                            <div class="p-5 border-b border-white/30 dark:border-slate-700/50 bg-white/50 dark:bg-slate-800/50 font-black text-slate-800 dark:text-white uppercase tracking-wider text-sm flex items-center gap-2">
+                                <i class="ph ph-list-dashes text-brand"></i> Daftar Modul
+                            </div>
+                            <div class="overflow-y-auto flex-1 p-3 space-y-2" id="pvLessonList"></div>
+                        </div>
+                    </div>
+                `;
+                
+                const lessonList = document.getElementById('pvLessonList');
+                product.lessons.forEach((lesson, idx) => {
+                    const div = document.createElement('div');
+                    const isActive = idx === 0;
+                    div.className = `p-4 rounded-2xl cursor-pointer transition-all border ${isActive ? 'bg-gradient-to-r from-brand to-purple-600 border-transparent text-white shadow-lg shadow-brand/30' : 'hover:bg-white/50 dark:hover:bg-slate-800/50 border-white/40 dark:border-slate-700/50 text-slate-700 dark:text-slate-300'}`;
+                    div.innerHTML = `<div class="font-bold text-sm flex items-center gap-3"><i class="ph ${isActive ? 'ph-play-circle text-2xl' : 'ph-video text-xl'} shrink-0"></i> <span class="leading-tight">${idx + 1}. ${lesson.title}</span></div>`;
+                    
+                    div.onclick = () => {
+                        Array.from(lessonList.children).forEach(c => {
+                            c.className = 'p-4 rounded-2xl cursor-pointer transition-all border hover:bg-white/50 dark:hover:bg-slate-800/50 border-white/40 dark:border-slate-700/50 text-slate-700 dark:text-slate-300';
+                            c.querySelector('i').className = 'ph ph-video text-xl shrink-0';
+                        });
+                        
+                        div.className = 'p-4 rounded-2xl cursor-pointer transition-all border bg-gradient-to-r from-brand to-purple-600 border-transparent text-white shadow-lg shadow-brand/30';
+                        div.querySelector('i').className = 'ph ph-play-circle text-2xl shrink-0';
+                        
+                        const videoId = getYTVideoId(lesson.url);
+                        document.getElementById('pvYtPlayer').src = videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0` : '';
+                    };
+                    lessonList.appendChild(div);
+                });
+
+                const firstId = getYTVideoId(product.lessons[0].url);
+                if(firstId) document.getElementById('pvYtPlayer').src = `https://www.youtube.com/embed/${firstId}?autoplay=1&rel=0`;
+            } else {
+                structuredArea.innerHTML = `<div class="text-slate-500 font-bold p-8 bg-white/40 dark:bg-slate-800/40 rounded-3xl text-center border border-white/50 dark:border-slate-700/50"><i class="ph ph-empty text-4xl mb-2 opacity-50 block"></i>Belum ada file atau materi yang diupload.</div>`;
+            }
+
+            const htmlArea = document.getElementById('pvHtmlArea');
+            if (product.accessHtml && product.accessHtml.trim() !== '') {
+                htmlArea.innerHTML = `<h4 class="font-black text-slate-800 dark:text-white mb-3 flex items-center gap-2"><i class="ph ph-info text-amber-500"></i> Info Tambahan</h4>` + product.accessHtml;
+                htmlArea.classList.remove('hidden');
+            } else {
+                htmlArea.classList.add('hidden');
+            }
+        };
+
+        window.closeProductViewer = () => {
+            const player = document.getElementById('pvYtPlayer');
+            if(player) player.src = ''; 
+            const pv = document.getElementById('productViewer');
+            if(pv) pv.classList.add('hidden');
+            const ml = document.getElementById('marketplaceList');
+            if(ml) ml.classList.remove('hidden');
+        };
+
+        // --- CHECKOUT LOGIC ---
+
+        window.loadCheckoutProduct = async (productId) => {
+            try {
+                const [res, setRes] = await Promise.all([
+                    apiCall('getProducts'),
+                    apiCall('getSettings')
+                ]);
+                
+                const products = res.data || [];
+                let found = products.find(p => String(p.id) === String(productId));
+                
+                if(found) {
+                    window.appState.currentCheckoutProduct = found;
+                    document.getElementById('coProdTitle').innerText = found.title;
+                    document.getElementById('coProdPrice').innerText = window.formatRp(found.price);
+                    
+                    const coProdImageContainer = document.getElementById('coProdImageContainer');
+                    if (coProdImageContainer) {
+                        if(found.imageUrl) {
+                            coProdImageContainer.innerHTML = `<img src="${found.imageUrl}" class="w-full h-full object-cover">`;
+                            coProdImageContainer.className = "w-14 h-14 rounded-xl shadow-lg shadow-brand/30 overflow-hidden shrink-0";
+                        } else {
+                            coProdImageContainer.innerHTML = `<i class="ph ph-package"></i>`;
+                            coProdImageContainer.className = "w-14 h-14 bg-gradient-to-br from-brand to-purple-500 rounded-xl flex items-center justify-center text-white text-3xl shadow-lg shadow-brand/30 shrink-0";
+                        }
+                    }
+                    
+                    window.appState.currentCheckoutUniqueCode = Math.floor(Math.random() * 900) + 100;
+                    
+                    if(setRes && setRes.data) window.appState.settings = setRes.data;
+
+                    window.recalculateCheckout();
+                    window.renderCheckoutPaymentMethods();
+
+                    const refId = localStorage.getItem('affiliateRef');
+                    if (refId) {
+                        const badge = document.getElementById('coAffiliateBadgeContainer');
+                        if(badge) badge.classList.remove('hidden');
+                        const nameDisplay = document.getElementById('coAffiliateNameDisplay');
+                        if(nameDisplay) nameDisplay.innerText = refId.toUpperCase();
+                    }
+
+                } else {
+                    document.getElementById('view-checkout').innerHTML = "<h2 class='text-center mt-20 text-3xl font-black text-slate-800 dark:text-white'>Product Not Found</h2>";
+                }
+            } catch(e) {
+                console.error(e);
+            }
+        };
+
+        window.recalculateCheckout = () => {
+            const product = window.appState.currentCheckoutProduct;
+            const coupon = window.appState.currentCheckoutCoupon;
+            const uniqueCode = window.appState.currentCheckoutUniqueCode;
+            
+            if(!product) return;
+
+            const fee = 113;
+            document.getElementById('coFee').innerText = `- Rp. ${fee}`;
+
+            let discount = 0;
+            if (coupon) {
+                if (coupon.type === 'percent') {
+                    discount = product.price * (coupon.value / 100);
+                } else {
+                    discount = coupon.value;
+                }
+                if(discount > product.price) discount = product.price;
+
+                document.getElementById('coDiscountRow').classList.remove('hidden');
+                document.getElementById('coDiscountCodeDisplay').innerText = coupon.code;
+                document.getElementById('coDiscountAmount').innerText = `- ${window.formatRp(discount)}`;
+            } else {
+                document.getElementById('coDiscountRow').classList.add('hidden');
+            }
+
+            const total = product.price - fee - discount + uniqueCode;
+            
+            const totalStr = total.toString();
+            const paddedTotal = totalStr.padStart(4, '0');
+            const last3 = paddedTotal.slice(-3);
+            const rest = paddedTotal.slice(0, -3);
+            const formattedRest = new Intl.NumberFormat('id-ID').format(Number(rest));
+            
+            const finalHtml = `Rp. ${formattedRest}.<span class="text-red-500 dark:text-red-400">${last3}</span>`;
+            document.getElementById('coTotal').innerHTML = finalHtml;
+            document.getElementById('coTotalPay').innerHTML = finalHtml;
+        };
+
+        window.applyVoucher = async () => {
+            const codeInput = document.getElementById('coVoucherInput').value.toUpperCase().trim();
+            const msgEl = document.getElementById('coVoucherMsg');
+            
+            if(!codeInput) return;
+            
+            const btn = document.getElementById('btnApplyVoucher');
+            btn.innerText = "...";
+
+            try {
+                const res = await apiCall('getCoupons');
+                const coupons = res.data || [];
+                let found = coupons.find(c => c.code === codeInput);
+
+                if(found) {
+                    if (found.applicableProductId && found.applicableProductId !== 'all' && String(found.applicableProductId) !== String(window.appState.currentCheckoutProduct.id)) {
+                        window.appState.currentCheckoutCoupon = null;
+                        window.recalculateCheckout();
+                        msgEl.innerHTML = `<i class="ph ph-warning-circle"></i> Kupon tidak berlaku untuk produk ini.`;
+                        msgEl.className = "text-xs mt-3 bg-red-500/10 text-red-500 p-2 rounded-lg font-bold flex items-center gap-1";
+                    } else {
+                        window.appState.currentCheckoutCoupon = found;
+                        window.recalculateCheckout();
+                        msgEl.innerHTML = `<i class="ph ph-check-circle text-lg"></i> Kupon ${found.code} berhasil diterapkan!`;
+                        msgEl.className = "text-xs mt-3 bg-green-500/10 text-green-600 dark:text-green-400 p-2 rounded-lg font-bold flex items-center gap-1";
+                    }
+                } else {
+                    window.appState.currentCheckoutCoupon = null;
+                    window.recalculateCheckout();
+                    msgEl.innerHTML = `<i class="ph ph-warning-circle"></i> Kupon tidak ditemukan / tidak valid.`;
+                    msgEl.className = "text-xs mt-3 bg-red-500/10 text-red-500 p-2 rounded-lg font-bold flex items-center gap-1";
+                }
+            } catch(e) {
+                console.error(e);
+            }
+            btn.innerText = "PAKAI";
+        };
+
+        window.renderCheckoutPaymentMethods = () => {
+            const container = document.getElementById('coPaymentMethods');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            const settings = window.appState.settings;
+            if(settings && settings.banks) {
+                settings.banks.forEach((bank, index) => {
+                    container.innerHTML += `
+                        <label class="flex items-center justify-between p-4 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:border-brand transition-all">
+                            <div class="flex items-center gap-3">
+                                <input type="radio" name="paymentMethod" value="Manual-${bank.name}" class="w-5 h-5 text-brand accent-brand" ${index===0?'checked':''}>
+                                <div class="font-bold text-slate-800 dark:text-white text-sm">Bank ${bank.name}</div>
+                            </div>
+                            <i class="ph ph-bank text-2xl text-slate-400"></i>
+                        </label>
+                    `;
+                });
+            }
+            
+            if(settings && settings.gateways && settings.gateways.duitku) {
+                container.innerHTML += `
+                <label class="flex items-center justify-between p-4 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:border-brand transition-all">
+                    <div class="flex items-center gap-3">
+                        <input type="radio" name="paymentMethod" value="Duitku" class="w-5 h-5 text-brand accent-brand">
+                        <div class="font-bold text-slate-800 dark:text-white text-sm">Otomatis - Duitku</div>
+                    </div>
+                </label>`;
+            }
+        };
+
+        window.submitCheckout = async () => {
+            const name = document.getElementById('coName').value;
+            const email = document.getElementById('coEmail').value;
+            const rawPassword = document.getElementById('coPassword').value;
+            const rawWa = document.getElementById('coWA').value;
+            const wa = window.formatPhoneNumber(rawWa); // KUNCI PERBAIKAN WA
+            const methodEl = document.querySelector('input[name="paymentMethod"]:checked');
+            
+            if(!name || !email || !rawPassword || !wa) {
+                alert("Harap isi lengkap form Akun.");
+                return;
+            }
+            if(!methodEl) {
+                alert("Pilih metode pembayaran.");
+                return;
+            }
+
+            const btn = document.getElementById('btnSubmitCheckout');
+            btn.innerText = "PROCESSING...";
+
+            const product = window.appState.currentCheckoutProduct;
+            const coupon = window.appState.currentCheckoutCoupon;
+            const uniqueCode = window.appState.currentCheckoutUniqueCode;
+
+            const hashedPassword = await window.hashPassword(rawPassword);
+            const refId = localStorage.getItem('affiliateRef') || null;
+
+            let discount = 0;
+            if (coupon) {
+                discount = coupon.type === 'percent' ? product.price * (coupon.value / 100) : coupon.value;
+                if(discount > product.price) discount = product.price;
+            }
+            const finalTotal = product.price - 113 - discount + uniqueCode;
+            
+            const orderData = {
+                id: "", // Dikosongkan agar Apps Script membuat UUID di Backend
+                customerName: name, customerEmail: email, customerWA: wa,
+                productId: product.id, productTitle: product.title, basePrice: product.price,
+                discountApplied: discount, totalPay: finalTotal, paymentMethod: methodEl.value,
+                status: 'Pending', userPasswordHash: hashedPassword, affiliateRef: refId, createdAt: Date.now()
+            };
+
+            try {
+                await apiCall('saveOrder', orderData);
+                
+                document.getElementById('view-checkout').innerHTML = `
+                    <div class="max-w-md mx-auto mt-20 glass p-10 rounded-3xl shadow-2xl text-center border border-white/40">
+                        <div class="w-24 h-24 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-green-500">
+                            <i class="ph ph-check-circle text-6xl"></i>
+                        </div>
+                        <h2 class="text-3xl font-black text-slate-800 dark:text-white mb-2">Order Diterima!</h2>
+                        <p class="mb-8">Admin akan segera memverifikasi pesanan Anda. Akses produk akan terbuka otomatis.</p>
+                        <a href="?" class="bg-brand text-white font-bold py-4 px-8 rounded-xl block shadow-lg shadow-brand/30">Selesai & Login</a>
+                    </div>
+                `;
+            } catch(e) {
+                alert("Terjadi kesalahan: " + e.message);
+                btn.innerText = "CREATE ORDER";
+            }
+        };
+
+        window.renderOrdersTable = () => {
+            const tbody = document.getElementById('ordersTableBody');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+
+            if(window.appState.orders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-10 text-center text-slate-500 font-bold">Belum ada orderan masuk.</td></tr>`;
+                return;
+            }
+
+            window.appState.orders.forEach(o => {
+                const isPaid = o.status === 'Paid';
+                const statusBadge = isPaid 
+                    ? `<span class="bg-green-500/20 text-green-700 dark:text-green-400 px-3 py-1 rounded-lg text-xs font-black uppercase">Paid</span>`
+                    : `<span class="bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 px-3 py-1 rounded-lg text-xs font-black uppercase">Pending</span>`;
+                
+                const actionBtn = isPaid 
+                    ? `<button class="text-xs text-slate-400 dark:text-slate-500 font-bold bg-white/30 dark:bg-slate-800/30 px-4 py-2 rounded-lg cursor-not-allowed border border-white/20 dark:border-slate-700/50" disabled>Aktif</button>`
+                    : `<button onclick="window.approveOrder('${o.id}')" class="bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-md shadow-brand/30 transition-all flex items-center gap-1 justify-center"><i class="ph ph-check-circle text-base"></i> Approve / Aktifkan</button>`;
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors">
+                        <td class="px-6 py-4 text-xs font-mono font-bold text-slate-500 dark:text-slate-400">#${String(o.id).substring(0,6)}</td>
+                        <td class="px-6 py-4">
+                            <p class="font-bold text-slate-800 dark:text-white text-base leading-tight">${o.customerName}</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">${o.paymentMethod}</p>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-slate-700 dark:text-slate-300 font-bold">${o.productTitle}</td>
+                        <td class="px-6 py-4 text-sm">
+                            <p class="font-black text-slate-800 dark:text-white text-base">${window.formatRp(o.totalPay || o.basePrice)}</p>
+                            ${o.couponCode ? `<p class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-md inline-flex items-center gap-1 mt-1 border border-emerald-500/20"><i class="ph ph-ticket"></i> ${o.couponCode}</p>` : ''}
+                        </td>
+                        <td class="px-6 py-4 text-center">${statusBadge}</td>
+                        <td class="px-6 py-4 text-right flex justify-end">${actionBtn}</td>
+                    </tr>
+                `;
+            });
+        };
+
+        window.approveOrder = async (orderId) => {
+            const order = window.appState.orders.find(o => String(o.id) === String(orderId));
+            if(!order) return;
+            
+            if(confirm(`Approve pesanan dari ${order.customerName}? Akses produk otomatis terbuka.`)) {
+                try {
+                    await apiCall('approveOrder', {id: orderId});
+                    showToast("Order Approved! Akses diberikan ke kustomer.");
+                    await loadAllData();
+                } catch(e) {
+                    showToast(e.message, "error");
+                }
+            }
+        };
+
+        window.renderSettingsBankList = () => {
+            const container = document.getElementById('bankList');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            const settings = window.appState.settings;
+            if(settings && settings.banks) {
+                settings.banks.forEach((b) => {
+                    container.innerHTML += `
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 bank-item bg-white/50 dark:bg-slate-900/50 p-3 border border-slate-200 dark:border-slate-700 rounded-xl">
+                            <input type="text" placeholder="Nama Bank (BCA)" value="${b.name}" class="w-full sm:w-1/4 px-3 py-2 border border-slate-300 dark:border-slate-600 bg-transparent rounded-lg text-sm outline-none focus:border-brand font-bold dark:text-white b-name">
+                            <input type="text" placeholder="No Rekening" value="${b.no}" class="w-2/4 px-3 py-2 border border-slate-300 dark:border-slate-600 bg-transparent rounded-lg text-sm outline-none focus:border-brand font-mono dark:text-white b-no">
+                            <input type="text" placeholder="Atas Nama" value="${b.owner}" class="w-full sm:w-1/4 px-3 py-2 border border-slate-300 dark:border-slate-600 bg-transparent rounded-lg text-sm outline-none focus:border-brand font-medium dark:text-white b-owner">
+                            <button type="button" onclick="this.parentElement.remove()" class="text-red-500 p-2 hover:bg-red-500/20 rounded-lg transition-colors bg-red-500/10 sm:bg-transparent"><i class="ph ph-trash text-xl"></i></button>
+                        </div>
+                    `;
+                });
+            }
+        };
+
+        window.addBankField = () => {
+            const container = document.getElementById('bankList');
+            if (container) {
+                container.innerHTML += `
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 bank-item bg-white/50 dark:bg-slate-900/50 p-3 border border-slate-200 dark:border-slate-700 rounded-xl">
+                        <input type="text" placeholder="Nama Bank" class="w-full sm:w-1/4 px-3 py-2 border border-slate-300 dark:border-slate-600 bg-transparent rounded-lg text-sm outline-none focus:border-brand font-bold dark:text-white b-name">
+                        <input type="text" placeholder="No Rekening" class="w-full sm:w-2/4 px-3 py-2 border border-slate-300 dark:border-slate-600 bg-transparent rounded-lg text-sm outline-none focus:border-brand font-mono dark:text-white b-no">
+                        <input type="text" placeholder="Atas Nama" class="w-full sm:w-1/4 px-3 py-2 border border-slate-300 dark:border-slate-600 bg-transparent rounded-lg text-sm outline-none focus:border-brand font-medium dark:text-white b-owner">
+                        <button type="button" onclick="this.parentElement.remove()" class="text-red-500 p-2 hover:bg-red-500/20 rounded-lg transition-colors bg-red-500/10 sm:bg-transparent"><i class="ph ph-trash text-xl"></i></button>
+                    </div>
+                `;
+            }
+        };
+
+        window.saveSettings = async () => {
+            try {
+                const name = document.getElementById('settingAppName')?.value || '';
+                const color = document.getElementById('settingColor')?.value || '#4f46e5';
+                const logoUrlInput = document.getElementById('settingLogoUrl')?.value || '';
+                const logoFileInput = document.getElementById('settingLogoFile')?.files?.[0];
+                
+                const rawAdminWa = document.getElementById('notifAdminWa')?.value || '';
+                const adminWa = window.formatPhoneNumber(rawAdminWa);
+
+                document.documentElement.style.setProperty('--brand-color', color);
+                document.documentElement.style.setProperty('--brand-hover', color); 
+                
+                document.querySelectorAll('.app-name-display').forEach(el => {
+                    el.innerText = name || 'iMersFireship';
+                });
+                
+                const settingColorTextEl = document.getElementById('settingColorText');
+                if (settingColorTextEl) settingColorTextEl.value = color;
+
+                const bankItems = document.querySelectorAll('.bank-item');
+                const banks = [];
+                bankItems.forEach(el => {
+                    const bname = el.querySelector('.b-name').value;
+                    const bno = el.querySelector('.b-no').value;
+                    const bowner = el.querySelector('.b-owner').value;
+                    if(bname) banks.push({name: bname, no: bno, owner: bowner});
+                });
+
+                let finalLogoUrl = logoUrlInput;
+                if (logoFileInput) {
+                    finalLogoUrl = await window.compressImage(logoFileInput, 400);
+                }
+                
+                const payload = {
+                    appName: name, primaryColor: color, logoUrl: finalLogoUrl, banks: banks,
+                    adminWa: adminWa
+                };
+
+                await apiCall('saveSettings', payload);
+                window.applyLogo(finalLogoUrl);
+                showToast("Admin settings saved!");
+                await loadAllData();
+            } catch(e) {
+                showToast(e.message, "error");
+            }
+        };
+
+        window.applyLogo = (src) => {
+            const appLogoSidebar = document.getElementById('appLogoSidebar');
+            if (src) { if(appLogoSidebar) { appLogoSidebar.src = src; appLogoSidebar.classList.remove('hidden'); } }
+            else { if(appLogoSidebar) { appLogoSidebar.src = ''; appLogoSidebar.classList.add('hidden'); } }
+        };
+
+        window.showToast = (m, t='success') => {
+            const el = document.getElementById('toast'), msgEl = document.getElementById('toastMsg');
+            if(!el || !msgEl) return; msgEl.innerText = m;
+            
+            if (document.getElementById('toastIcon')) {
+                document.getElementById('toastIcon').className = t === 'error' ? "ph ph-x-circle text-red-500 text-2xl drop-shadow-sm" : "ph ph-check-circle text-green-500 text-2xl drop-shadow-sm";
+                el.className = t === 'error' ? "fixed bottom-6 right-6 glass text-slate-800 dark:text-white px-5 py-4 rounded-2xl shadow-2xl transform translate-y-0 opacity-100 transition-all duration-300 z-[60] flex items-center gap-3 border-l-4 border-l-red-500" : "fixed bottom-6 right-6 glass text-slate-800 dark:text-white px-5 py-4 rounded-2xl shadow-2xl transform translate-y-0 opacity-100 transition-all duration-300 z-[60] flex items-center gap-3 border-l-4 border-l-green-500";
+            }
+            
+            setTimeout(() => { el.classList.add('translate-y-20', 'opacity-0'); }, 3000);
+        };
+
+        function updateDashboardStats() {
+            document.getElementById('statProducts').innerText = window.appState.products.length;
+            if (window.appState.user.role === 'admin') {
+                document.getElementById('statUsers').innerText = window.appState.usersData.length;
+                let rev = 0, ord = 0;
+                window.appState.orders.forEach(o => { if (o.status === 'Paid') { rev += Number(o.totalPay || 0); ord++; } });
+                document.getElementById('statRevenue').innerText = window.formatRp(rev);
+                document.getElementById('statOrders').innerText = ord;
+            }
+        }
+
+        function initChart() {
+            setTimeout(() => {
+                const canvas = document.getElementById('salesChart');
+                if(!canvas || window.appState.user.role !== 'admin') return;
+
+                let existingChart = Chart.getChart(canvas);
+                if (existingChart) existingChart.destroy();
+                
+                const isDark = document.documentElement.classList.contains('dark');
+                const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
+                const textColor = isDark ? '#cbd5e1' : '#64748b';
+
+                new Chart(canvas.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: ['Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb'],
+                        datasets: [{
+                            label: 'Revenue',
+                            data: [1200000, 1900000, 3000000, 5000000, 4200000, 6800000, 12450000],
+                            borderColor: getComputedStyle(document.documentElement).getPropertyValue('--brand-color').trim() || '#4f46e5',
+                            backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                            borderWidth: 3, tension: 0.4, fill: true,
+                            pointBackgroundColor: '#ffffff', pointBorderColor: '#4f46e5',
+                            pointBorderWidth: 2, pointRadius: 4, pointHoverRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true, plugins: { legend: { display: false } },
+                        scales: {
+                            y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor } },
+                            x: { grid: { display: false }, ticks: { color: textColor } }
+                        }
+                    }
+                });
+            }, 100);
+        }
+    </script>
+</body>
+</html>
