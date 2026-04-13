@@ -3268,24 +3268,48 @@
     };
 
     window.saveSettings = async () => { 
-        try{ 
-            const n=document.getElementById('settingAppName').value, c=document.getElementById('settingColor').value, f=document.getElementById('settingLogoFile').files[0], lu=document.getElementById('settingLogoUrl').value; 
-            document.documentElement.style.setProperty('--brand-color',c); 
-            document.documentElement.style.setProperty('--brand-hover',c); 
-            document.querySelectorAll('.app-name-display').forEach(e=>e.innerText=n||'iMers'); 
+        try { 
+            const n = document.getElementById('settingAppName').value;
+            const c = document.getElementById('settingColor').value;
+            const f = document.getElementById('settingLogoFile').files[0];
+            const lu = document.getElementById('settingLogoUrl').value; 
             
-            let bk=[]; 
-            document.querySelectorAll('.bank-item').forEach(e=>{
-                const bn=e.querySelector('.b-name').value; 
-                if(bn) bk.push({name:bn,no:e.querySelector('.b-no').value,owner:e.querySelector('.b-owner').value});
+            document.documentElement.style.setProperty('--brand-color', c); 
+            document.documentElement.style.setProperty('--brand-hover', c); 
+            document.querySelectorAll('.app-name-display').forEach(e => e.innerText = n || 'iMers'); 
+            
+            let bk = []; 
+            document.querySelectorAll('.bank-item').forEach(e => {
+                const bn = e.querySelector('.b-name').value; 
+                if(bn) bk.push({name: bn, no: e.querySelector('.b-no').value, owner: e.querySelector('.b-owner').value});
             }); 
             
-            let img = f ? await window.compressImage(f,400) : lu; 
-            await apiCall('saveSettings',{appName:n, primaryColor:c, logoUrl:img, adminWa:window.formatPhoneNumber(document.getElementById('notifAdminWa').value), banks:bk}); 
+            // AMBIL DATA NOTIFIKASI (WA, EMAIL, TELEGRAM)
+            const notifData = {
+                waProvider: document.getElementById('notifWaProvider')?.value || 'fonnte',
+                waToken: document.getElementById('notifWaToken')?.value || '',
+                adminWa: window.formatPhoneNumber(document.getElementById('notifAdminWa')?.value || ''),
+                emailProvider: document.getElementById('notifEmailProvider')?.value || 'google',
+                emailToken: document.getElementById('notifEmailToken')?.value || '',
+                telegramToken: document.getElementById('notifTelegramToken')?.value || '',
+                telegramChatId: document.getElementById('notifTelegramChatId')?.value || ''
+            };
+
+            let img = f ? await window.compressImage(f, 400) : lu; 
+            
+            // KIRIM SEMUA DATA KE GOOGLE SHEETS
+            await apiCall('saveSettings', {
+                appName: n, 
+                primaryColor: c, 
+                logoUrl: img, 
+                banks: bk,
+                notifications: notifData
+            }); 
+            
             window.applyLogo(img); 
             window.showToast("Settings saved!"); 
             await window.loadAllData(); 
-        } catch(e) { window.showToast(e.message,"error"); } 
+        } catch(e) { window.showToast(e.message, "error"); } 
     };
 
     window.applyLogo = (src) => { 
