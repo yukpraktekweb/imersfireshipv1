@@ -952,6 +952,125 @@
         </main>
     </div>
 
+    <!-- Product Form Modal (FIXED: DIKEMBALIKAN KARENA SEBELUMNYA HILANG) -->
+    <div id="productModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 hidden flex justify-center items-center p-4">
+        <div class="glass rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col border border-white/20">
+            <div class="p-6 border-b border-white/20 dark:border-slate-700/50 flex justify-between items-center bg-white/40 dark:bg-slate-800/40">
+                <h3 class="text-xl font-black text-slate-800 dark:text-white" id="productModalTitle">Add/Edit Product</h3>
+                <button onclick="closeProductModal()" class="text-slate-500 hover:text-red-500 bg-white/50 dark:bg-slate-700/50 p-2 rounded-full transition-colors"><i class="ph ph-x text-xl"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1">
+                <form id="productForm" class="space-y-5">
+                    <input type="hidden" id="prodId">
+                    
+                    <div id="checkoutLinkContainer" class="hidden mb-4 p-5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div class="flex-1 w-full overflow-hidden">
+                            <p class="text-xs font-black text-emerald-600 dark:text-emerald-400 mb-2 uppercase tracking-wider">Affiliate Checkout Link</p>
+                            <input type="text" id="prodCheckoutUrl" readonly class="w-full bg-white/50 dark:bg-slate-900/50 border border-emerald-500/30 rounded-lg text-sm text-emerald-700 dark:text-emerald-300 font-mono p-3 outline-none" value="">
+                        </div>
+                        <button type="button" onclick="copyCheckoutLink()" class="bg-gradient-to-r from-emerald-500 to-green-600 text-white px-5 py-3 rounded-xl shadow-lg shadow-green-500/30 flex items-center gap-2 text-sm font-bold transition-all w-full sm:w-auto justify-center mt-6 sm:mt-0">
+                            <i class="ph ph-copy text-xl"></i> Copy Link
+                        </button>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Gambar Produk (URL / Upload)</label>
+                        <div class="flex items-center gap-3 mb-3">
+                            <input type="url" id="prodImageUrl" placeholder="https://example.com/image.png" class="flex-1 px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm">
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <input type="file" id="prodImageFile" accept="image/*" class="w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-brand/10 file:text-brand hover:file:bg-brand/20 transition-all cursor-pointer">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Title</label>
+                            <input type="text" id="prodTitle" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Price (Rp)</label>
+                            <input type="number" id="prodPrice" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Type</label>
+                        <select id="prodType" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white" onchange="toggleProductFields()">
+                            <option value="download">Digital Download / General</option>
+                            <option value="lms">LMS / Course</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Short Description</label>
+                        <textarea id="prodDesc" rows="2" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white"></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Salespage URL (Eksternal Landing Page)</label>
+                        <input type="url" id="prodSalesPage" placeholder="https://domainkamu.com/promo" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm">
+                        <p class="text-[10px] text-slate-500 mt-1">Kosongkan jika ingin user langsung diarahkan ke halaman Checkout.</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Internal Salespage (HTML Custom)</label>
+                        <textarea id="prodSalesPageHtml" rows="4" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm font-mono leading-relaxed" placeholder="<h1>Ketik landing page HTML kustom kamu di sini...</h1>\n<p>Keuntungannya...</p>"></textarea>
+                        <p class="text-[10px] text-slate-500 mt-1">Gunakan ini jika kamu tidak punya URL Landing Page Eksternal.</p>
+                    </div>
+
+                    <div class="border border-white/40 dark:border-slate-700/50 rounded-2xl p-5 bg-white/30 dark:bg-slate-800/30">
+                        <h4 class="font-black text-slate-800 dark:text-white mb-3 text-sm flex items-center gap-2"><i class="ph ph-money text-green-500 text-lg"></i> Komisi Affiliate</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Tipe Komisi</label>
+                                <select id="prodCommType" class="w-full px-3 py-2 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm">
+                                    <option value="percent">Persentase (%)</option>
+                                    <option value="fixed">Nominal (Rp)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nilai Komisi</label>
+                                <input type="number" id="prodCommValue" placeholder="0" class="w-full px-3 py-2 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="fieldDownload" class="border border-white/40 dark:border-slate-700/50 rounded-2xl p-5 bg-white/30 dark:bg-slate-800/30">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <label class="block text-sm font-black text-slate-800 dark:text-white">File Downloads</label>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Masukkan link file GDrive / Mediafire / dll.</p>
+                            </div>
+                            <button type="button" onclick="addDownloadField()" class="text-xs bg-brand/10 hover:bg-brand/20 text-brand font-black px-4 py-2 rounded-lg shadow-sm flex items-center gap-1 transition-colors"><i class="ph ph-plus text-lg"></i> Add Link</button>
+                        </div>
+                        <div id="downloadsContainer" class="space-y-3"></div>
+                    </div>
+
+                    <div id="fieldLMS" class="hidden border border-white/40 dark:border-slate-700/50 rounded-2xl p-5 bg-white/30 dark:bg-slate-800/30">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <label class="block text-sm font-black text-slate-800 dark:text-white">Video Lessons</label>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Masukkan link YouTube materi Anda.</p>
+                            </div>
+                            <button type="button" onclick="addLessonField()" class="text-xs bg-brand/10 hover:bg-brand/20 text-brand font-black px-4 py-2 rounded-lg shadow-sm flex items-center gap-1 transition-colors"><i class="ph ph-plus text-lg"></i> Add Video</button>
+                        </div>
+                        <div id="lessonsContainer" class="space-y-3"></div>
+                    </div>
+
+                    <div id="fieldAccess">
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300">Additional Info / Notes <span class="text-slate-400 dark:text-slate-500 font-medium">(Optional)</span></label>
+                        </div>
+                        <textarea id="prodAccess" rows="3" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm leading-relaxed" placeholder="Catatan tambahan (mendukung tag HTML dasar jika dibutuhkan)..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="p-6 border-t border-white/20 dark:border-slate-700/50 bg-white/40 dark:bg-slate-800/40 flex justify-end gap-3">
+                <button onclick="closeProductModal()" class="px-6 py-3 text-slate-600 dark:text-slate-300 font-bold hover:bg-white/50 dark:hover:bg-slate-700/50 rounded-xl transition-colors">Cancel</button>
+                <button onclick="saveProduct()" class="bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-brand/30">Save Product</button>
+            </div>
+        </div>
+    </div>
+
     <!-- NEW: MODAL FORM KUPON MASTER & AFFILIATE -->
     <div id="couponModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 hidden flex justify-center items-center p-4">
         <div class="glass rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col border border-white/20">
