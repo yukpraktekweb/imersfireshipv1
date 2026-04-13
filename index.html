@@ -385,11 +385,6 @@
                         <i id="themeIcon" class="ph ph-moon text-xl"></i>
                     </button>
 
-                    <button class="w-10 h-10 rounded-xl bg-white/50 dark:bg-slate-800/50 flex items-center justify-center text-slate-600 dark:text-slate-300 shadow-sm border border-white/40 dark:border-slate-700/50 relative">
-                        <i class="ph ph-bell text-xl"></i>
-                        <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full shadow-sm shadow-red-500/50"></span>
-                    </button>
-                    
                     <div class="flex items-center gap-3 pl-4 border-l border-slate-300/50 dark:border-slate-700/50">
                         <div class="text-right hidden sm:block">
                             <p class="text-sm font-bold text-slate-800 dark:text-white" id="userDisplayName">Admin User</p>
@@ -477,9 +472,9 @@
 
                 <!-- PRODUCTS VIEW -->
                 <div id="content-products" class="content-section hidden space-y-6">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
                         <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Manage your digital downloads and courses here.</p>
-                        <button onclick="openProductModal()" class="shrink-0 relative z-10 cursor-pointer bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 shadow-lg shadow-brand/30 text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all">
+                        <button onclick="openProductModal()" class="shrink-0 relative z-20 bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 shadow-lg shadow-brand/30 text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all cursor-pointer w-full sm:w-auto justify-center">
                             <i class="ph ph-plus-circle text-xl"></i> Add Product
                         </button>
                     </div>
@@ -488,7 +483,7 @@
                         <i class="ph ph-info text-2xl shrink-0 relative z-10 text-blue-500"></i>
                         <p class="relative z-10"><strong>Affiliate Ready:</strong> Edit produk untuk mengatur komisi dan link eksternal (Salespage) untuk Affiliate.</p>
                     </div>
-                    <div class="glass rounded-2xl overflow-hidden shadow-xl">
+                    <div class="glass rounded-2xl overflow-hidden shadow-xl relative z-10">
                         <div class="overflow-x-auto">
                             <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
                                 <thead class="bg-white/40 dark:bg-slate-800/40 text-slate-800 dark:text-slate-200 border-b border-white/50 dark:border-slate-700/50">
@@ -506,41 +501,11 @@
                     </div>
                 </div>
 
-                <!-- ORDERS VIEW -->
-                <div id="content-orders" class="content-section hidden space-y-6">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-                        <div>
-                            <h3 class="text-2xl font-black text-slate-800 dark:text-white">Order Management</h3>
-                            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Verifikasi dan kelola pesanan masuk.</p>
-                        </div>
-                    </div>
-                    <div class="glass rounded-2xl overflow-hidden shadow-xl">
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
-                                <thead class="bg-white/40 dark:bg-slate-800/40 text-slate-800 dark:text-slate-200 border-b border-white/50 dark:border-slate-700/50">
-                                    <tr>
-                                        <th class="px-6 py-4 font-bold">Order ID</th>
-                                        <th class="px-6 py-4 font-bold">Customer</th>
-                                        <th class="px-6 py-4 font-bold">Product</th>
-                                        <th class="px-6 py-4 font-bold">Total</th>
-                                        <th class="px-6 py-4 font-bold">Status</th>
-                                        <th class="px-6 py-4 font-bold text-right">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="ordersTableBody" class="divide-y divide-white/20 dark:divide-slate-700/50">
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- MARKETPLACE VIEW -->
                 <div id="content-marketplace" class="content-section hidden space-y-6">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-                        <div>
-                            <h3 class="text-2xl font-black text-slate-800 dark:text-white">My Marketplace</h3>
-                            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Katalog semua produk digital dan Course yang Anda jual.</p>
-                        </div>
+                    <div class="mb-4">
+                        <h3 class="text-2xl font-black text-slate-800 dark:text-white">My Marketplace</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Katalog semua produk digital dan Course yang Anda jual.</p>
                     </div>
                     <div id="marketplaceList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     </div>
@@ -560,13 +525,39 @@
                     </div>
                 </div>
 
+                <!-- ORDERS VIEW -->
+                <div id="content-orders" class="content-section hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
+                        <div>
+                            <h3 class="text-2xl font-black text-slate-800 dark:text-white">Order Management</h3>
+                            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Verifikasi dan kelola pesanan masuk.</p>
+                        </div>
+                    </div>
+                    <div class="glass rounded-2xl overflow-hidden shadow-xl relative z-10">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                                <thead class="bg-white/40 dark:bg-slate-800/40 text-slate-800 dark:text-slate-200 border-b border-white/50 dark:border-slate-700/50">
+                                    <tr>
+                                        <th class="px-6 py-4 font-bold">Order ID</th>
+                                        <th class="px-6 py-4 font-bold">Customer</th>
+                                        <th class="px-6 py-4 font-bold">Product</th>
+                                        <th class="px-6 py-4 font-bold">Total</th>
+                                        <th class="px-6 py-4 font-bold text-center">Status</th>
+                                        <th class="px-6 py-4 font-bold text-right">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ordersTableBody" class="divide-y divide-white/20 dark:divide-slate-700/50">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- LICENSE VIEW -->
                 <div id="content-license" class="content-section hidden space-y-6">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-                        <div>
-                            <h3 class="text-2xl font-black text-slate-800 dark:text-white">My License</h3>
-                            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Gunakan kode lisensi ini untuk aktivasi layanan atau produk khusus Anda.</p>
-                        </div>
+                    <div class="mb-4">
+                        <h3 class="text-2xl font-black text-slate-800 dark:text-white">My License</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Gunakan kode lisensi ini untuk aktivasi layanan atau produk khusus Anda.</p>
                     </div>
                     <div class="glass rounded-3xl shadow-xl p-8 border border-white/40 dark:border-slate-700/50 max-w-2xl">
                         <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left">
@@ -620,11 +611,9 @@
 
                 <!-- PROFILE (CHANGE PASSWORD) VIEW -->
                 <div id="content-profile" class="content-section hidden space-y-6">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-                        <div>
-                            <h3 class="text-2xl font-black text-slate-800 dark:text-white">My Profile</h3>
-                            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Kelola informasi akun dan keamanan Anda di sini.</p>
-                        </div>
+                    <div class="mb-4">
+                        <h3 class="text-2xl font-black text-slate-800 dark:text-white">My Profile</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Kelola informasi akun dan keamanan Anda di sini.</p>
                     </div>
                     <div class="glass rounded-3xl shadow-xl p-8 border border-white/40 dark:border-slate-700/50 max-w-xl">
                         <h4 class="font-black text-slate-800 dark:text-white mb-6 text-lg border-b border-white/30 dark:border-slate-700/50 pb-3 flex items-center gap-2">
@@ -654,23 +643,23 @@
 
                 <!-- USERS DIRECTORY VIEW -->
                 <div id="content-users" class="content-section hidden space-y-6">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
                         <div>
                             <h3 class="text-2xl font-black text-slate-800 dark:text-white">Users Directory</h3>
                             <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Kelola data member, admin, dan agency.</p>
                         </div>
-                        <button onclick="openUserModal()" id="btnAddUser" class="shrink-0 relative z-10 cursor-pointer bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 shadow-lg shadow-brand/30 text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all">
+                        <button onclick="openUserModal()" id="btnAddUser" class="shrink-0 relative z-20 cursor-pointer bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 shadow-lg shadow-brand/30 text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all w-full sm:w-auto justify-center">
                             <i class="ph ph-user-plus text-xl"></i> Tambah User
                         </button>
                     </div>
-                    <div class="glass rounded-2xl overflow-hidden shadow-xl">
+                    <div class="glass rounded-2xl overflow-hidden shadow-xl relative z-10">
                         <div class="overflow-x-auto">
                             <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
                                 <thead class="bg-white/40 dark:bg-slate-800/40 text-slate-800 dark:text-slate-200 border-b border-white/50 dark:border-slate-700/50">
                                     <tr>
                                         <th class="px-6 py-4 font-bold">Nama & Email</th>
-                                        <th class="px-6 py-4 font-bold">WhatsApp</th>
-                                        <th class="px-6 py-4 font-bold">Role</th>
+                                        <th class="px-6 py-4 font-bold">Info Rekening</th>
+                                        <th class="px-6 py-4 font-bold text-center">Role</th>
                                         <th class="px-6 py-4 font-bold">Kode Affiliate</th>
                                         <th class="px-6 py-4 font-bold text-right">Aksi</th>
                                     </tr>
@@ -684,7 +673,7 @@
 
                 <!-- AFFILIATE SYSTEM VIEW -->
                 <div id="content-affiliate" class="content-section hidden space-y-6">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                    <div class="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
                             <h3 class="text-2xl font-black text-slate-800 dark:text-white">Affiliate Dashboard</h3>
                             <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Pilih produk dan bagikan link affiliate Anda (Kode Ref: <span id="affiliateRefCode" class="font-bold text-brand uppercase"></span>).</p>
@@ -734,16 +723,16 @@
 
                 <!-- COUPONS VIEW -->
                 <div id="content-coupons" class="content-section hidden space-y-6">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
                         <div>
                             <h3 class="text-2xl font-black text-slate-800 dark:text-white">Master Kupon</h3>
                             <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Buat kode diskon untuk promosi atau base affiliate Anda.</p>
                         </div>
-                        <button onclick="openCouponModal()" class="shrink-0 relative z-10 cursor-pointer bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 shadow-lg shadow-brand/30 text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all">
+                        <button onclick="openCouponModal()" class="shrink-0 relative z-20 cursor-pointer bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 shadow-lg shadow-brand/30 text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all w-full sm:w-auto justify-center">
                             <i class="ph ph-plus-circle text-xl"></i> Tambah Kupon
                         </button>
                     </div>
-                    <div class="glass rounded-2xl overflow-hidden shadow-xl">
+                    <div class="glass rounded-2xl overflow-hidden shadow-xl relative z-10">
                         <div class="overflow-x-auto">
                             <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
                                 <thead class="bg-white/40 dark:bg-slate-800/40 text-slate-800 dark:text-slate-200 border-b border-white/50 dark:border-slate-700/50">
@@ -764,11 +753,9 @@
 
                 <!-- BROADCAST VIEW -->
                 <div id="content-broadcast" class="content-section hidden space-y-6 max-w-4xl">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-                        <div>
-                            <h3 class="text-2xl font-black text-slate-800 dark:text-white">Broadcast System</h3>
-                            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Kirim pesan massal ke Users via WhatsApp API Gateway.</p>
-                        </div>
+                    <div class="mb-4">
+                        <h3 class="text-2xl font-black text-slate-800 dark:text-white">Broadcast System</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Kirim pesan massal ke Users via WhatsApp API Gateway.</p>
                     </div>
                     <div class="glass rounded-3xl shadow-xl p-8 border border-white/40 dark:border-slate-700/50">
                         <form id="broadcastForm" class="space-y-6" onsubmit="prepareBroadcast(); simulateBroadcast(event)">
@@ -962,246 +949,7 @@
         </main>
     </div>
 
-    <!-- ==========================================
-         MODALS & OVERLAYS
-         ========================================== -->
-         
-    <!-- Product Form Modal -->
-    <div id="productModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 hidden flex justify-center items-center p-4">
-        <div class="glass rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col border border-white/20">
-            <div class="p-6 border-b border-white/20 dark:border-slate-700/50 flex justify-between items-center bg-white/40 dark:bg-slate-800/40">
-                <h3 class="text-xl font-black text-slate-800 dark:text-white" id="productModalTitle">Add/Edit Product</h3>
-                <button onclick="closeProductModal()" class="text-slate-500 hover:text-red-500 bg-white/50 dark:bg-slate-700/50 p-2 rounded-full transition-colors"><i class="ph ph-x text-xl"></i></button>
-            </div>
-            <div class="p-6 overflow-y-auto flex-1">
-                <form id="productForm" class="space-y-5">
-                    <input type="hidden" id="prodId">
-                    
-                    <div id="checkoutLinkContainer" class="hidden mb-4 p-5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                        <div class="flex-1 w-full overflow-hidden">
-                            <p class="text-xs font-black text-emerald-600 dark:text-emerald-400 mb-2 uppercase tracking-wider">Affiliate Checkout Link</p>
-                            <input type="text" id="prodCheckoutUrl" readonly class="w-full bg-white/50 dark:bg-slate-900/50 border border-emerald-500/30 rounded-lg text-sm text-emerald-700 dark:text-emerald-300 font-mono p-3 outline-none" value="">
-                        </div>
-                        <button type="button" onclick="copyCheckoutLink()" class="bg-gradient-to-r from-emerald-500 to-green-600 text-white px-5 py-3 rounded-xl shadow-lg shadow-green-500/30 flex items-center gap-2 text-sm font-bold transition-all w-full sm:w-auto justify-center mt-6 sm:mt-0">
-                            <i class="ph ph-copy text-xl"></i> Copy Link
-                        </button>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Gambar Produk (URL / Upload)</label>
-                        <div class="flex items-center gap-3 mb-3">
-                            <input type="url" id="prodImageUrl" placeholder="https://example.com/image.png" class="flex-1 px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm">
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <input type="file" id="prodImageFile" accept="image/*" class="w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-brand/10 file:text-brand hover:file:bg-brand/20 transition-all cursor-pointer">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div>
-                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Title</label>
-                            <input type="text" id="prodTitle" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white" required>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Price (Rp)</label>
-                            <input type="number" id="prodPrice" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white" required>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Type</label>
-                        <select id="prodType" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white" onchange="toggleProductFields()">
-                            <option value="download">Digital Download / General</option>
-                            <option value="lms">LMS / Course</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Short Description</label>
-                        <textarea id="prodDesc" rows="2" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white"></textarea>
-                    </div>
-                    
-                    <!-- NEW: Salespage URL -->
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Salespage URL (Eksternal Landing Page)</label>
-                        <input type="url" id="prodSalesPage" placeholder="https://domainkamu.com/promo" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm">
-                        <p class="text-[10px] text-slate-500 mt-1">Kosongkan jika ingin user langsung diarahkan ke halaman Checkout.</p>
-                    </div>
-
-                    <!-- NEW: Internal Salespage HTML -->
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Internal Salespage (HTML Custom)</label>
-                        <textarea id="prodSalesPageHtml" rows="4" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm font-mono leading-relaxed" placeholder="<h1>Ketik landing page HTML kustom kamu di sini...</h1>\n<p>Keuntungannya...</p>"></textarea>
-                        <p class="text-[10px] text-slate-500 mt-1">Gunakan ini jika kamu tidak punya URL Landing Page Eksternal.</p>
-                    </div>
-
-                    <!-- NEW: Affiliate Commission Settings -->
-                    <div class="border border-white/40 dark:border-slate-700/50 rounded-2xl p-5 bg-white/30 dark:bg-slate-800/30">
-                        <h4 class="font-black text-slate-800 dark:text-white mb-3 text-sm flex items-center gap-2"><i class="ph ph-money text-green-500 text-lg"></i> Komisi Affiliate</h4>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Tipe Komisi</label>
-                                <select id="prodCommType" class="w-full px-3 py-2 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm">
-                                    <option value="percent">Persentase (%)</option>
-                                    <option value="fixed">Nominal (Rp)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nilai Komisi</label>
-                                <input type="number" id="prodCommValue" placeholder="0" class="w-full px-3 py-2 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Dynamic Field: Download -->
-                    <div id="fieldDownload" class="border border-white/40 dark:border-slate-700/50 rounded-2xl p-5 bg-white/30 dark:bg-slate-800/30">
-                        <div class="flex justify-between items-center mb-4">
-                            <div>
-                                <label class="block text-sm font-black text-slate-800 dark:text-white">File Downloads</label>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Masukkan link file GDrive / Mediafire / dll.</p>
-                            </div>
-                            <button type="button" onclick="addDownloadField()" class="text-xs bg-brand/10 hover:bg-brand/20 text-brand font-black px-4 py-2 rounded-lg shadow-sm flex items-center gap-1 transition-colors"><i class="ph ph-plus text-lg"></i> Add Link</button>
-                        </div>
-                        <div id="downloadsContainer" class="space-y-3"></div>
-                    </div>
-
-                    <!-- Dynamic Field: LMS -->
-                    <div id="fieldLMS" class="hidden border border-white/40 dark:border-slate-700/50 rounded-2xl p-5 bg-white/30 dark:bg-slate-800/30">
-                        <div class="flex justify-between items-center mb-4">
-                            <div>
-                                <label class="block text-sm font-black text-slate-800 dark:text-white">Video Lessons</label>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Masukkan link YouTube materi Anda.</p>
-                            </div>
-                            <button type="button" onclick="addLessonField()" class="text-xs bg-brand/10 hover:bg-brand/20 text-brand font-black px-4 py-2 rounded-lg shadow-sm flex items-center gap-1 transition-colors"><i class="ph ph-plus text-lg"></i> Add Video</button>
-                        </div>
-                        <div id="lessonsContainer" class="space-y-3"></div>
-                    </div>
-
-                    <!-- Unified Access HTML Field (Optional) -->
-                    <div id="fieldAccess">
-                        <div class="flex items-center justify-between mb-2">
-                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300">Additional Info / Notes <span class="text-slate-400 dark:text-slate-500 font-medium">(Optional)</span></label>
-                        </div>
-                        <textarea id="prodAccess" rows="3" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm leading-relaxed" placeholder="Catatan tambahan (mendukung tag HTML dasar jika dibutuhkan)..."></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="p-6 border-t border-white/20 dark:border-slate-700/50 bg-white/40 dark:bg-slate-800/40 flex justify-end gap-3">
-                <button onclick="closeProductModal()" class="px-6 py-3 text-slate-600 dark:text-slate-300 font-bold hover:bg-white/50 dark:hover:bg-slate-700/50 rounded-xl transition-colors">Cancel</button>
-                <button onclick="saveProduct()" class="bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-brand/30">Save Product</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- User Form Modal -->
-    <div id="userModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 hidden flex justify-center items-center p-4">
-        <div class="glass rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col border border-white/20">
-            <div class="p-6 border-b border-white/20 dark:border-slate-700/50 flex justify-between items-center bg-white/40 dark:bg-slate-800/40">
-                <h3 class="text-xl font-black text-slate-800 dark:text-white" id="userModalTitle">Tambah User Baru</h3>
-                <button onclick="closeUserModal()" class="text-slate-500 hover:text-red-500 bg-white/50 dark:bg-slate-700/50 p-2 rounded-full transition-colors"><i class="ph ph-x text-xl"></i></button>
-            </div>
-            <div class="p-6 overflow-y-auto">
-                <form id="userForm" class="space-y-4">
-                    <input type="hidden" id="userId">
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Lengkap</label>
-                        <input type="text" id="userName" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium" required>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Email</label>
-                        <input type="email" id="userEmail" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium" required>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">No WhatsApp</label>
-                        <input type="text" id="userWa" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Role</label>
-                        <select id="userRole" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium">
-                            <option value="user">User (Member)</option>
-                            <option value="agency">Agency</option>
-                            <option value="admin">Admin</option>
-                        </select>
-                    </div>
-                    <div id="userPasswordContainer">
-                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Password</label>
-                        <input type="password" id="userPassword" placeholder="Kosongkan jika tidak ingin mengubah" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium">
-                    </div>
-                </form>
-            </div>
-            <div class="p-6 border-t border-white/20 dark:border-slate-700/50 bg-white/40 dark:bg-slate-800/40 flex justify-end gap-3">
-                <button onclick="closeUserModal()" class="px-6 py-3 text-slate-600 dark:text-slate-300 font-bold hover:bg-white/50 dark:hover:bg-slate-700/50 rounded-xl transition-colors">Batal</button>
-                <button onclick="saveUser()" class="bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-brand/30">Simpan User</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Template Form Modal -->
-    <div id="templateModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 hidden flex justify-center items-center p-4">
-        <div class="glass rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col border border-white/20">
-            <div class="p-6 border-b border-white/20 dark:border-slate-700/50 flex justify-between items-center bg-white/40 dark:bg-slate-800/40">
-                <h3 class="text-xl font-black text-slate-800 dark:text-white">Edit Notification Template</h3>
-                <button onclick="closeTemplateModal()" class="text-slate-500 hover:text-red-500 bg-white/50 dark:bg-slate-700/50 p-2 rounded-full transition-colors"><i class="ph ph-x text-xl"></i></button>
-            </div>
-            <div class="p-6 overflow-y-auto flex-1 space-y-6">
-                <div class="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 flex flex-col gap-2">
-                    <p class="text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider"><i class="ph ph-info"></i> Variabel Dinamis yang Bisa Digunakan:</p>
-                    <p class="text-sm font-mono text-slate-600 dark:text-slate-300">{nama}, {email}, {wa}, {produk}, {total}, {metode}, {status}, {password}, {komisi}</p>
-                </div>
-                <form id="templateForm" class="space-y-5">
-                    <input type="hidden" id="tmplId">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                        <div>
-                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Event Type</label>
-                            <input type="text" id="tmplType" readonly class="w-full px-4 py-3 bg-slate-100/50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-slate-500 font-mono font-bold cursor-not-allowed">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Template Title</label>
-                            <input type="text" id="tmplTitle" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white" required>
-                        </div>
-                    </div>
-                    <!-- Email Section -->
-                    <div class="border border-white/40 dark:border-slate-700/50 rounded-2xl p-5 bg-white/30 dark:bg-slate-800/30">
-                        <div class="flex items-center justify-between mb-4">
-                            <h4 class="font-black text-slate-800 dark:text-white flex items-center gap-2"><i class="ph ph-envelope-simple text-xl text-rose-500"></i> Email Template</h4>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <span class="text-xs font-bold text-slate-500 dark:text-slate-400">Aktifkan Email</span>
-                                <input type="checkbox" id="tmplActiveEmail" class="accent-brand w-4 h-4">
-                            </label>
-                        </div>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Email Subject</label>
-                                <input type="text" id="tmplSubject" class="w-full px-4 py-2 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Email Body (Mendukung HTML)</label>
-                                <textarea id="tmplEmailBody" rows="4" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm leading-relaxed"></textarea>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- WA Section -->
-                    <div class="border border-white/40 dark:border-slate-700/50 rounded-2xl p-5 bg-white/30 dark:bg-slate-800/30">
-                        <div class="flex items-center justify-between mb-4">
-                            <h4 class="font-black text-slate-800 dark:text-white flex items-center gap-2"><i class="ph ph-whatsapp-logo text-xl text-green-500"></i> WhatsApp Template</h4>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <span class="text-xs font-bold text-slate-500 dark:text-slate-400">Aktifkan WA</span>
-                                <input type="checkbox" id="tmplActiveWA" class="accent-brand w-4 h-4">
-                            </label>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Pesan WA (Gunakan * untuk tebal, _ untuk miring)</label>
-                            <textarea id="tmplWABody" rows="4" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm leading-relaxed"></textarea>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="p-6 border-t border-white/20 dark:border-slate-700/50 bg-white/40 dark:bg-slate-800/40 flex justify-end gap-3">
-                <button onclick="closeTemplateModal()" class="px-6 py-3 text-slate-600 dark:text-slate-300 font-bold hover:bg-white/50 dark:hover:bg-slate-700/50 rounded-xl transition-colors">Batal</button>
-                <button onclick="saveTemplate()" class="bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-brand/30">Simpan Template</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Coupon Form Modal -->
+    <!-- NEW: MODAL FORM KUPON MASTER & AFFILIATE -->
     <div id="couponModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 hidden flex justify-center items-center p-4">
         <div class="glass rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col border border-white/20">
             <div class="p-6 border-b border-white/20 dark:border-slate-700/50 flex justify-between items-center bg-white/40 dark:bg-slate-800/40">
@@ -1211,30 +959,45 @@
             <div class="p-6">
                 <form id="couponForm" class="space-y-5">
                     <input type="hidden" id="couponId">
+                    
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Kode Kupon</label>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Kode Kupon Anda</label>
                         <input type="text" id="couponCode" placeholder="Misal: DISKON50" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white uppercase font-mono font-bold" required>
+                        <p class="text-[10px] text-slate-500 mt-1">Nama ini yang akan dipakai pembeli saat checkout.</p>
                     </div>
-                    <div class="grid grid-cols-2 gap-5">
+
+                    <!-- KHUSUS AFFILIATE / USER (Pilih Kupon Master) -->
+                    <div id="affiliateCouponConfig" class="hidden">
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Pilih Master Kupon <span class="text-xs text-brand">(Acuan Diskon)</span></label>
+                        <select id="masterCouponSelect" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white font-medium">
+                            <!-- Options di-generate lewat JS app.js -->
+                        </select>
+                        <p class="text-[10px] text-slate-500 mt-1">Nilai diskon akan mengikuti kupon buatan Admin yang Anda pilih di atas.</p>
+                    </div>
+
+                    <!-- KHUSUS ADMIN (Atur Nilai Bebas) -->
+                    <div id="adminCouponConfig" class="hidden">
+                        <div class="grid grid-cols-2 gap-5 mb-5">
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Tipe Diskon</label>
+                                <select id="couponType" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white font-medium">
+                                    <option value="percent">Persentase (%)</option>
+                                    <option value="fixed">Nominal (Rp)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Nilai Potongan</label>
+                                <input type="number" id="couponValue" placeholder="Misal: 50" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white font-medium">
+                            </div>
+                        </div>
                         <div>
-                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Tipe</label>
-                            <select id="couponType" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white font-medium">
-                                <option value="percent">Persentase (%)</option>
-                                <option value="fixed">Nominal (Rp)</option>
+                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Berlaku Untuk Produk</label>
+                            <select id="couponProductId" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white font-medium">
+                                <option value="all">Semua Produk</option>
                             </select>
                         </div>
-                        <div>
-                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Nilai Potongan</label>
-                            <input type="number" id="couponValue" placeholder="Misal: 50" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white font-medium" required>
-                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Berlaku Untuk Produk</label>
-                        <select id="couponProductId" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white font-medium">
-                            <option value="all">Semua Produk</option>
-                        </select>
-                    </div>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Kupon ini dapat dibagikan dan diklaim pada halaman checkout.</p>
+                    
                 </form>
             </div>
             <div class="p-6 border-t border-white/20 dark:border-slate-700/50 bg-white/40 dark:bg-slate-800/40 flex justify-end gap-3">
@@ -1266,7 +1029,9 @@
         <i id="toastIcon" class="ph ph-check-circle text-green-500 text-2xl drop-shadow-sm"></i>
         <span id="toastMsg" class="text-sm font-bold">Notification message</span>
     </div>
-
+<!-- ==========================================
+         JAVASCRIPT LOGIC (app.js)
+         ========================================== -->
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzYn9Q-5Ks8T2fePe7PCyYIhQtUq6ZxCh7uszdCFEtquQD0uLDLAC3Rip-1_GmAbB3n/exec";
 
@@ -1276,12 +1041,9 @@
                 throw new Error("URL Belum disetting");
             }
             
-            // Pastikan URL bersih dari spasi yang nggak sengaja ke-copy
             const cleanUrl = SCRIPT_URL.trim();
             let url = `${cleanUrl}?action=${action}`;
             
-            // Konfigurasi fetch standar untuk Google Apps Script
-            // redirect: 'follow' wajib karena Google selalu melakukan redirect internal
             let options = { 
                 method: 'GET', 
                 redirect: 'follow',
@@ -1290,11 +1052,6 @@
 
             if (payload) {
                 options.method = 'POST';
-                /**
-                 * KUNCI PERBAIKAN CORS: 
-                 * Kita gunakan 'text/plain'. Kalau pakai 'application/json', browser bakal kirim 
-                 * request OPTIONS (Preflight) yang sering ditolak mentah-mentah sama Google.
-                 */
                 options.headers = { 'Content-Type': 'text/plain;charset=utf-8' };
                 options.body = JSON.stringify(payload);
             }
@@ -1311,9 +1068,6 @@
                 try {
                     data = JSON.parse(text); 
                 } catch(e) {
-                    /** * Kalau masuk sini, artinya GAS lo ngirim HTML Error (Backend Crash).
-                     * Browser nangkep ini sebagai CORS error karena halaman HTML Google nggak punya header CORS.
-                     */
                     console.error("Respon bukan JSON (Kemungkinan GAS Error):", text);
                     throw new Error("Koneksi ditolak Google! Pastikan di GAS lo fungsinya sudah di-Return pakai ContentService.createTextOutput.");
                 }
@@ -1326,7 +1080,6 @@
                 if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
                     throw new Error("Koneksi ditolak Google! Pastikan di GAS lo fungsinya sudah di-Return pakai ContentService.createTextOutput.");
                 }
-                
                 throw err;
             }
         }
@@ -1370,12 +1123,10 @@
             return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
         };
 
-        // HELPER: Generate Random Short ID (6 Characters)
         window.generateShortId = () => {
             return Math.random().toString(36).substring(2, 8).toUpperCase();
         };
 
-        // HELPER: Auto Format WA (Mencegah Angka 0 Hilang di Google Sheets)
         window.formatPhoneNumber = (number) => {
             if (!number) return '';
             let cleaned = String(number).replace(/\D/g, '');
@@ -1387,7 +1138,6 @@
             return cleaned;
         };
 
-        // HELPER: Kompresi Gambar ke Base64 agar muat di Google Sheets (Max 50k karakter)
         window.compressImage = (file, maxWidth = 400) => {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -1407,14 +1157,12 @@
                         canvas.height = h;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, w, h);
-                        // Menggunakan JPEG dengan kualitas 70% agar teks Base64 sangat ringan
                         resolve(canvas.toDataURL('image/jpeg', 0.7)); 
                     };
                 };
             });
         };
 
-        // --- SAFE EVENT LISTENERS SETUP ---
         function initAppEvents() {
             const lf = document.getElementById('loginForm');
             if (lf) lf.addEventListener('submit', handleLogin);
@@ -1439,12 +1187,11 @@
                 });
             }
 
-            // TRIGGER PEMBERSIHAN INPUT GAMBAR JIKA MENGISI URL MANUAL
             const settingLogoUrl = document.getElementById('settingLogoUrl');
             const settingLogoFile = document.getElementById('settingLogoFile');
             if (settingLogoUrl && settingLogoFile) {
                 settingLogoUrl.addEventListener('input', () => {
-                    settingLogoFile.value = ''; // Kosongkan file upload jika ngetik manual
+                    settingLogoFile.value = ''; 
                 });
             }
 
@@ -1452,14 +1199,13 @@
             const prodImageFile = document.getElementById('prodImageFile');
             if (prodImageUrl && prodImageFile) {
                 prodImageUrl.addEventListener('input', () => {
-                    prodImageFile.value = ''; // Kosongkan file upload jika ngetik manual
+                    prodImageFile.value = '';
                 });
             }
 
             initializeAppState();
         }
 
-        // Mengecek apakah HTML sudah siap. Jika sudah siap, langsung jalankan. Jika belum, tunggu sampai siap.
         if (document.readyState === 'loading') {
             document.addEventListener("DOMContentLoaded", initAppEvents);
         } else {
@@ -1542,10 +1288,9 @@
             if (userLicenseCodeEl) userLicenseCodeEl.innerText = user.license || 'TIDAK-ADA-LISENSI';
             
             if (user.role === 'user') {
-                document.querySelectorAll('[data-target="products"], [data-target="orders"], [data-target="coupons"], [data-target="users"], [data-target="broadcast"], [data-target="templates"], [data-target="settings"]').forEach(el => el.classList.add('hidden'));
+                document.querySelectorAll('[data-target="products"], [data-target="orders"], [data-target="users"], [data-target="broadcast"], [data-target="templates"], [data-target="settings"]').forEach(el => el.classList.add('hidden'));
             }
 
-            // --- FITUR BARU: SEMBUNYIKAN OMSET & CHART JIKA BUKAN ADMIN ---
             if (user.role !== 'admin') {
                 const revenueCard = document.getElementById('statRevenue')?.closest('.glass');
                 if (revenueCard) revenueCard.classList.add('hidden');
@@ -1556,7 +1301,6 @@
                 const chartCard = document.getElementById('salesChart')?.closest('.glass');
                 if (chartCard) chartCard.classList.add('hidden');
 
-                // Agency & User harus bisa akses menu Kupon
                 if (user.role === 'agency' || user.role === 'user') {
                     document.querySelectorAll('[data-target="coupons"]').forEach(el => el.classList.remove('hidden'));
                 }
@@ -1749,7 +1493,6 @@
                 const res = await apiCall('getUsers');
                 const users = res.data || [];
                 
-                // FIXED LOGIN LOGIC: Case-insensitive email check & support for plain/hashed pwd
                 const user = users.find(u => u.email.toLowerCase() === emailInput.toLowerCase() && (u.password === hashedPass || u.password === rawPass));
 
                 if (user) {
@@ -1926,7 +1669,6 @@
 
             showToast("Memproses Broadcast...", "info");
             
-            // Disable button dan tampilkan loading
             const submitBtn = e.target.querySelector('button[type="submit"]');
             if (submitBtn) {
                 submitBtn.disabled = true;
@@ -1939,7 +1681,6 @@
                     message: msg
                 };
                 
-                // Memanggil API Broadcast di backend (Code.gs)
                 await apiCall('sendBroadcast', payload);
                 
                 showToast("Berhasil mengirim notifikasi massal!", "success");
@@ -1947,7 +1688,6 @@
             } catch(err) {
                 showToast("Error memproses broadcast: " + err.message, "error");
             } finally {
-                // Kembalikan tombol seperti semula
                 if (submitBtn) {
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '<i class="ph ph-paper-plane-tilt text-xl"></i> Kirim Broadcast Sekarang';
@@ -1974,7 +1714,7 @@
             }
         };
 
-        // --- USERS CRUD LOGIC (FIXED COLUMN MISMATCH) ---
+        // --- USERS CRUD LOGIC ---
         window.renderUsersTable = () => {
             const tbody = document.getElementById('usersTableBody');
             if(!tbody) return;
@@ -1993,7 +1733,6 @@
                 };
                 const roleClass = roleColors[u.role] || roleColors['user'];
 
-                // FIXED BANK INFO CARD
                 let bankInfo = '<span class="text-slate-400 italic text-[10px]">Belum diatur</span>';
                 if(u.bankName || u.bankNo) {
                     bankInfo = `<div class="bg-brand/5 p-2 rounded-lg border border-brand/10 text-[10px]">
@@ -2003,7 +1742,6 @@
                     </div>`;
                 }
 
-                // SINKRONISASI KOLOM: Nama&Email | Bank Affiliate | Role | Code | Action
                 tbody.innerHTML += `
                     <tr class="hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors border-b border-white/10 dark:border-slate-700/30">
                         <td class="px-6 py-4">
@@ -2051,7 +1789,7 @@
             const name = document.getElementById('userName').value;
             const email = document.getElementById('userEmail').value;
             const rawWa = document.getElementById('userWa').value;
-            const wa = window.formatPhoneNumber(rawWa); // KUNCI PERBAIKAN WA
+            const wa = window.formatPhoneNumber(rawWa);
             const role = document.getElementById('userRole').value;
             const rawPass = document.getElementById('userPassword').value;
 
@@ -2114,7 +1852,7 @@
             }
         };
 
-        // --- AFFILIATE SYSTEM LOGIC (DUAL LINKS - INTERNAL FIXED) ---
+        // --- AFFILIATE SYSTEM LOGIC ---
         window.renderAffiliateList = () => {
             const container = document.getElementById('affiliateProductsList');
             const refCodeEl = document.getElementById('affiliateRefCode');
@@ -2168,10 +1906,8 @@
             window.appState.products.forEach(p => {
                 const currentPath = window.location.origin + window.location.pathname;
                 
-                // Link 1: Link Direct Checkout (Murni domain lo sendiri)
                 const affCheckoutLink = `${currentPath}?checkout=${p.id}&ref=${refId}`;
                 
-                // Link 2: Link Salespage (Internal jika salesPageUrl kosong)
                 let affSalespageLink = p.salesPageUrl ? 
                     `${p.salesPageUrl}${p.salesPageUrl.includes('?') ? '&' : '?'}ref=${refId}` : 
                     affCheckoutLink;
@@ -2604,15 +2340,22 @@
                         : '<span class="text-red-500 text-xs font-black uppercase">Produk Dihapus</span>';
                 }
 
+                let isMaster = c.createdBy === 'admin' || !c.createdBy;
+                let masterBadge = isMaster 
+                    ? `<span class="bg-purple-500/20 text-purple-700 dark:text-purple-400 px-2 py-0.5 rounded text-[10px] font-bold uppercase ml-2 align-middle">Master</span>` 
+                    : `<span class="bg-slate-500/20 text-slate-700 dark:text-slate-400 px-2 py-0.5 rounded text-[10px] font-bold uppercase ml-2 align-middle">Affiliate</span>`;
+
                 tbody.innerHTML += `
-                    <tr class="hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors">
-                        <td class="px-6 py-4 font-mono font-black text-brand dark:text-brandHover text-base">${c.code}</td>
-                        <td class="px-6 py-4 font-medium">${typeLabel}</td>
-                        <td class="px-6 py-4 font-black">${valueLabel}</td>
+                    <tr class="hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors border-b border-white/10 dark:border-slate-700/30">
+                        <td class="px-6 py-4 font-mono font-black text-brand dark:text-brandHover text-base">${c.code} ${masterBadge}</td>
+                        <td class="px-6 py-4 font-medium text-slate-700 dark:text-slate-300">${typeLabel}</td>
+                        <td class="px-6 py-4 font-black text-slate-800 dark:text-white">${valueLabel}</td>
                         <td class="px-6 py-4">${applicableLabel}</td>
                         <td class="px-6 py-4 text-right">
-                            <button onclick="editCoupon('${c.id}')" class="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 rounded-xl transition-colors" title="Edit"><i class="ph ph-pencil-simple text-xl"></i></button>
-                            <button onclick="deleteCoupon('${c.id}')" class="p-2 text-red-600 dark:text-red-400 hover:bg-red-500/20 rounded-xl transition-colors" title="Delete"><i class="ph ph-trash text-xl"></i></button>
+                            <div class="flex items-center justify-end gap-2">
+                                <button onclick="editCoupon('${c.id}')" class="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 rounded-xl transition-colors" title="Edit"><i class="ph ph-pencil-simple text-xl"></i></button>
+                                <button onclick="deleteCoupon('${c.id}')" class="p-2 text-red-600 dark:text-red-400 hover:bg-red-500/20 rounded-xl transition-colors" title="Delete"><i class="ph ph-trash text-xl"></i></button>
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -2637,7 +2380,33 @@
             if(f) f.reset();
             document.getElementById('couponId').value = '';
             document.getElementById('couponModalTitle').innerText = 'Tambah Kupon';
-            window.populateCouponProductSelect('all');
+            
+            const isAdmin = window.appState.user.role === 'admin';
+            const adminConfig = document.getElementById('adminCouponConfig');
+            const affConfig = document.getElementById('affiliateCouponConfig');
+            const masterSelect = document.getElementById('masterCouponSelect');
+
+            if (isAdmin) {
+                adminConfig.classList.remove('hidden');
+                affConfig.classList.add('hidden');
+                window.populateCouponProductSelect('all');
+            } else {
+                adminConfig.classList.add('hidden');
+                affConfig.classList.remove('hidden');
+                
+                masterSelect.innerHTML = '';
+                const masterCoupons = window.appState.coupons.filter(c => c.createdBy === 'admin' || !c.createdBy);
+                if(masterCoupons.length === 0) {
+                    masterSelect.innerHTML = '<option value="">Belum ada Master Kupon dari Admin</option>';
+                } else {
+                    masterSelect.innerHTML = '<option value="">-- Pilih Kupon Diskon --</option>';
+                    masterCoupons.forEach(mc => {
+                        const valLabel = mc.type === 'percent' ? `${mc.value}%` : window.formatRp(mc.value);
+                        masterSelect.innerHTML += `<option value="${mc.id}">${mc.code} (Diskon: ${valLabel})</option>`;
+                    });
+                }
+            }
+
             const cModal = document.getElementById('couponModal');
             if(cModal) cModal.classList.remove('hidden');
         };
@@ -2650,16 +2419,50 @@
         window.saveCoupon = async () => {
             let id = document.getElementById('couponId').value;
             const code = document.getElementById('couponCode').value.toUpperCase().trim();
-            const type = document.getElementById('couponType').value;
-            const value = Number(document.getElementById('couponValue').value);
-            const applicableProductId = document.getElementById('couponProductId').value;
+            const isAdmin = window.appState.user.role === 'admin';
 
-            if(!code || !value) {
-                showToast("Kode dan Nilai harus diisi", "error");
+            if(!code) {
+                showToast("Kode Kupon harus diisi", "error");
                 return;
             }
 
-            let data = { id: id || window.generateShortId(), code, type, value, applicableProductId, createdBy: window.appState.user.id };
+            let data = { 
+                id: id || window.generateShortId(), 
+                code: code,
+                createdBy: window.appState.user.id,
+                createdAt: Date.now()
+            };
+
+            if (isAdmin) {
+                data.type = document.getElementById('couponType').value;
+                data.value = Number(document.getElementById('couponValue').value);
+                data.applicableProductId = document.getElementById('couponProductId').value;
+                data.masterCouponId = '';
+                data.createdBy = 'admin';
+                
+                if(!data.value) {
+                    showToast("Nilai potongan harus diisi", "error");
+                    return;
+                }
+            } 
+            else {
+                const masterId = document.getElementById('masterCouponSelect').value;
+                if (!masterId) {
+                    showToast("Pilih Master Kupon terlebih dahulu", "error");
+                    return;
+                }
+                
+                const masterCoupon = window.appState.coupons.find(c => c.id === masterId);
+                if (!masterCoupon) {
+                    showToast("Master Kupon tidak valid", "error");
+                    return;
+                }
+
+                data.type = masterCoupon.type;
+                data.value = masterCoupon.value;
+                data.applicableProductId = masterCoupon.applicableProductId;
+                data.masterCouponId = masterId;
+            }
 
             try {
                 await apiCall('saveCoupon', data);
@@ -2674,12 +2477,35 @@
         window.editCoupon = (id) => {
             const coupon = window.appState.coupons.find(c => c.id === id);
             if(!coupon) return;
+
             document.getElementById('couponModalTitle').innerText = 'Edit Kupon';
             document.getElementById('couponId').value = coupon.id;
             document.getElementById('couponCode').value = coupon.code;
-            document.getElementById('couponType').value = coupon.type;
-            document.getElementById('couponValue').value = coupon.value;
-            window.populateCouponProductSelect(coupon.applicableProductId || 'all');
+            
+            const isAdmin = window.appState.user.role === 'admin';
+            const adminConfig = document.getElementById('adminCouponConfig');
+            const affConfig = document.getElementById('affiliateCouponConfig');
+            const masterSelect = document.getElementById('masterCouponSelect');
+
+            if (isAdmin || coupon.createdBy === 'admin' || !coupon.createdBy) {
+                adminConfig.classList.remove('hidden');
+                affConfig.classList.add('hidden');
+                document.getElementById('couponType').value = coupon.type;
+                document.getElementById('couponValue').value = coupon.value;
+                window.populateCouponProductSelect(coupon.applicableProductId || 'all');
+            } else {
+                adminConfig.classList.add('hidden');
+                affConfig.classList.remove('hidden');
+                
+                masterSelect.innerHTML = '';
+                const masterCoupons = window.appState.coupons.filter(c => c.createdBy === 'admin' || !c.createdBy);
+                masterCoupons.forEach(mc => {
+                    const valLabel = mc.type === 'percent' ? `${mc.value}%` : window.formatRp(mc.value);
+                    const selected = mc.id === coupon.masterCouponId ? 'selected' : '';
+                    masterSelect.innerHTML += `<option value="${mc.id}" ${selected}>${mc.code} (Diskon: ${valLabel})</option>`;
+                });
+            }
+            
             const cModal = document.getElementById('couponModal');
             if(cModal) cModal.classList.remove('hidden');
         };
@@ -3045,7 +2871,7 @@
             const email = document.getElementById('coEmail').value;
             const rawPassword = document.getElementById('coPassword').value;
             const rawWa = document.getElementById('coWA').value;
-            const wa = window.formatPhoneNumber(rawWa); // KUNCI PERBAIKAN WA
+            const wa = window.formatPhoneNumber(rawWa);
             const methodEl = document.querySelector('input[name="paymentMethod"]:checked');
             
             if(!name || !email || !rawPassword || !wa) {
@@ -3297,5 +3123,3 @@
             }, 100);
         }
     </script>
-</body>
-</html>
