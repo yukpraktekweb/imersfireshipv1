@@ -1031,7 +1031,7 @@
         <span id="toastMsg" class="text-sm font-bold">Notification message</span>
     </div>
 
-    <!-- ==========================================
+<!-- ==========================================
          JAVASCRIPT LOGIC (app.js)
          ========================================== -->
     <script>
@@ -1772,88 +1772,105 @@
             });
         };
 
+        // BUGS FIXED: Ditambahkan Optional Chaining untuk mencegah crash jika elemen HTML terhapus manual
         window.openUserModal = () => {
-            const form = document.getElementById('userForm');
-            if(form) form.reset();
-            document.getElementById('userId').value = '';
-            document.getElementById('userModalTitle').innerText = 'Tambah User Baru';
-            document.getElementById('userPasswordContainer').classList.remove('hidden');
-            document.getElementById('userPassword').required = true;
-            document.getElementById('userModal').classList.remove('hidden');
+            try {
+                const form = document.getElementById('userForm');
+                if(form) form.reset();
+                
+                const userIdInput = document.getElementById('userId');
+                if(userIdInput) userIdInput.value = '';
+                
+                const title = document.getElementById('userModalTitle');
+                if(title) title.innerText = 'Tambah User Baru';
+                
+                const pwdContainer = document.getElementById('userPasswordContainer');
+                if(pwdContainer) pwdContainer.classList.remove('hidden');
+                
+                const pwdInput = document.getElementById('userPassword');
+                if(pwdInput) pwdInput.required = true;
+                
+                const modal = document.getElementById('userModal');
+                if(modal) modal.classList.remove('hidden');
+            } catch (e) {
+                console.error("Gagal membuka Modal User: ", e);
+            }
         };
 
         window.closeUserModal = () => {
-            const modal = document.getElementById('userModal');
-            if(modal) modal.classList.add('hidden');
+            try {
+                const modal = document.getElementById('userModal');
+                if(modal) modal.classList.add('hidden');
+            } catch (e) {
+                console.error(e);
+            }
         };
 
         window.saveUser = async () => {
-            let id = document.getElementById('userId').value;
-            if (!id) id = window.generateShortId();
-            
-            const name = document.getElementById('userName').value;
-            const email = document.getElementById('userEmail').value;
-            const rawWa = document.getElementById('userWa').value;
-            const wa = window.formatPhoneNumber(rawWa);
-            const role = document.getElementById('userRole').value;
-            const rawPass = document.getElementById('userPassword').value;
+            try {
+                let idEl = document.getElementById('userId');
+                let id = idEl ? idEl.value : '';
+                if (!id) id = window.generateShortId();
+                
+                const name = document.getElementById('userName')?.value || '';
+                const email = document.getElementById('userEmail')?.value || '';
+                const rawWa = document.getElementById('userWa')?.value || '';
+                const wa = window.formatPhoneNumber(rawWa);
+                const role = document.getElementById('userRole')?.value || 'user';
+                const rawPass = document.getElementById('userPassword')?.value || '';
 
-            if(!name || !email) {
-                showToast("Nama dan Email wajib diisi", "error");
-                return;
-            }
-
-            let payload = { id, name, email, wa, role };
-
-            if (document.getElementById('userId').value) {
-                if (rawPass) {
-                    payload.password = await window.hashPassword(rawPass);
-                }
-            } else {
-                if (!rawPass) {
-                    showToast("Password wajib diisi untuk user baru", "error");
+                if(!name || !email) {
+                    showToast("Nama dan Email wajib diisi", "error");
                     return;
                 }
-                payload.password = await window.hashPassword(rawPass);
-                payload.license = role.toUpperCase() + '-' + Math.floor(Math.random() * 9999);
-                payload.affiliateCode = name.replace(/\s+/g, '').toUpperCase().substring(0, 5) + Math.floor(Math.random()*1000);
-            }
 
-            try {
+                let payload = { id, name, email, wa, role };
+
+                if (idEl && idEl.value) { // Jika ini adalah proses Edit User
+                    if (rawPass) {
+                        payload.password = await window.hashPassword(rawPass);
+                    }
+                } else { // Jika ini adalah proses Tambah User Baru
+                    if (!rawPass) {
+                        showToast("Password wajib diisi untuk user baru", "error");
+                        return;
+                    }
+                    payload.password = await window.hashPassword(rawPass);
+                    payload.license = role.toUpperCase() + '-' + Math.floor(Math.random() * 9999);
+                    payload.affiliateCode = name.replace(/\s+/g, '').toUpperCase().substring(0, 5) + Math.floor(Math.random()*1000);
+                }
+
                 await apiCall('saveUser', payload);
                 showToast("Data user berhasil disimpan!");
                 await loadAllData();
-                closeUserModal();
+                window.closeUserModal();
             } catch (e) {
                 showToast(e.message, "error");
             }
         };
 
         window.editUser = (id) => {
-            const u = window.appState.usersData.find(x => x.id === id);
-            if(!u) return;
-            document.getElementById('userModalTitle').innerText = 'Edit User';
-            document.getElementById('userId').value = u.id;
-            document.getElementById('userName').value = u.name;
-            document.getElementById('userEmail').value = u.email;
-            document.getElementById('userWa').value = u.wa || '';
-            document.getElementById('userRole').value = u.role || 'user';
-            
-            document.getElementById('userPassword').value = '';
-            document.getElementById('userPassword').required = false;
-            
-            document.getElementById('userModal').classList.remove('hidden');
-        };
-
-        window.deleteUser = async (id) => {
-            if(confirm("Hapus user ini?")) {
-                try {
-                    await apiCall('deleteUser', {id});
-                    showToast("User dihapus.");
-                    await loadAllData();
-                } catch (e) {
-                    showToast(e.message, "error");
+            try {
+                const u = window.appState.usersData.find(x => x.id === id);
+                if(!u) return;
+                
+                if(document.getElementById('userModalTitle')) document.getElementById('userModalTitle').innerText = 'Edit User';
+                if(document.getElementById('userId')) document.getElementById('userId').value = u.id;
+                if(document.getElementById('userName')) document.getElementById('userName').value = u.name;
+                if(document.getElementById('userEmail')) document.getElementById('userEmail').value = u.email;
+                if(document.getElementById('userWa')) document.getElementById('userWa').value = u.wa || '';
+                if(document.getElementById('userRole')) document.getElementById('userRole').value = u.role || 'user';
+                
+                const pwdInput = document.getElementById('userPassword');
+                if(pwdInput) {
+                    pwdInput.value = '';
+                    pwdInput.required = false;
                 }
+                
+                const modal = document.getElementById('userModal');
+                if(modal) modal.classList.remove('hidden');
+            } catch (e) {
+                console.error("Gagal membuka form Edit User: ", e);
             }
         };
 
