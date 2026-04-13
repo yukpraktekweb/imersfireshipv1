@@ -31,6 +31,66 @@
 
     <!-- Panggil File CSS Eksternal -->
     <link rel="stylesheet" href="style.css">
+
+    <style>
+        :root {
+            --brand-color: #4f46e5;
+            --brand-hover: #4338ca;
+            --app-name: "iMersFireship";
+        }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f0fdf4;
+            background-image: 
+                radial-gradient(at 40% 20%, hsla(28,100%,74%,0.4) 0px, transparent 50%),
+                radial-gradient(at 80% 0%, hsla(189,100%,56%,0.4) 0px, transparent 50%),
+                radial-gradient(at 0% 50%, hsla(355,100%,93%,0.4) 0px, transparent 50%),
+                radial-gradient(at 80% 50%, hsla(340,100%,76%,0.4) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, hsla(22,100%,77%,0.4) 0px, transparent 50%),
+                radial-gradient(at 80% 100%, hsla(242,100%,70%,0.4) 0px, transparent 50%),
+                radial-gradient(at 0% 0%, hsla(343,100%,76%,0.4) 0px, transparent 50%);
+            background-attachment: fixed;
+            transition: background 0.5s ease;
+        }
+
+        .dark body {
+            background-color: #0f172a;
+            background-image: 
+                radial-gradient(at 40% 20%, hsla(28,100%,40%,0.3) 0px, transparent 50%),
+                radial-gradient(at 80% 0%, hsla(189,100%,30%,0.3) 0px, transparent 50%),
+                radial-gradient(at 0% 50%, hsla(355,100%,40%,0.2) 0px, transparent 50%),
+                radial-gradient(at 80% 50%, hsla(340,100%,40%,0.3) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, hsla(22,100%,30%,0.3) 0px, transparent 50%),
+                radial-gradient(at 80% 100%, hsla(242,100%,40%,0.3) 0px, transparent 50%),
+                radial-gradient(at 0% 0%, hsla(343,100%,30%,0.2) 0px, transparent 50%);
+        }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        }
+        
+        .dark .glass {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .hidden { display: none !important; }
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .dark ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    </style>
 </head>
 <body class="text-slate-800 dark:text-slate-100 antialiased h-screen overflow-hidden flex flex-col transition-colors duration-300">
 
@@ -40,6 +100,7 @@
     <div id="view-checkout" class="hidden flex-1 overflow-y-auto relative w-full z-50 py-8 px-4">
         <div class="max-w-xl mx-auto space-y-5 pb-24">
             
+            <!-- Login Helper untuk Checkout -->
             <div id="coLoginHelper" class="glass rounded-2xl p-4 flex justify-between items-center border border-brand/30 bg-brand/5 hidden">
                 <div>
                     <p class="text-xs text-slate-500 dark:text-slate-400">Sudah punya akun?</p>
@@ -416,9 +477,9 @@
 
                 <!-- PRODUCTS VIEW -->
                 <div id="content-products" class="content-section hidden space-y-6">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                         <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Manage your digital downloads and courses here.</p>
-                        <button onclick="openProductModal()" class="bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 shadow-lg shadow-brand/30 text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all">
+                        <button onclick="openProductModal()" class="shrink-0 relative z-10 cursor-pointer bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 shadow-lg shadow-brand/30 text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all">
                             <i class="ph ph-plus-circle text-xl"></i> Add Product
                         </button>
                     </div>
@@ -447,7 +508,7 @@
 
                 <!-- ORDERS VIEW -->
                 <div id="content-orders" class="content-section hidden space-y-6">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                         <div>
                             <h3 class="text-2xl font-black text-slate-800 dark:text-white">Order Management</h3>
                             <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Verifikasi dan kelola pesanan masuk.</p>
@@ -475,9 +536,11 @@
 
                 <!-- MARKETPLACE VIEW -->
                 <div id="content-marketplace" class="content-section hidden space-y-6">
-                    <div class="mb-4">
-                        <h3 class="text-2xl font-black text-slate-800 dark:text-white">My Marketplace</h3>
-                        <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Katalog semua produk digital dan Course yang Anda jual.</p>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                        <div>
+                            <h3 class="text-2xl font-black text-slate-800 dark:text-white">My Marketplace</h3>
+                            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Katalog semua produk digital dan Course yang Anda jual.</p>
+                        </div>
                     </div>
                     <div id="marketplaceList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     </div>
@@ -499,9 +562,11 @@
 
                 <!-- LICENSE VIEW -->
                 <div id="content-license" class="content-section hidden space-y-6">
-                    <div class="mb-4">
-                        <h3 class="text-2xl font-black text-slate-800 dark:text-white">My License</h3>
-                        <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Gunakan kode lisensi ini untuk aktivasi layanan atau produk khusus Anda.</p>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                        <div>
+                            <h3 class="text-2xl font-black text-slate-800 dark:text-white">My License</h3>
+                            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Gunakan kode lisensi ini untuk aktivasi layanan atau produk khusus Anda.</p>
+                        </div>
                     </div>
                     <div class="glass rounded-3xl shadow-xl p-8 border border-white/40 dark:border-slate-700/50 max-w-2xl">
                         <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left">
@@ -555,9 +620,11 @@
 
                 <!-- PROFILE (CHANGE PASSWORD) VIEW -->
                 <div id="content-profile" class="content-section hidden space-y-6">
-                    <div class="mb-4">
-                        <h3 class="text-2xl font-black text-slate-800 dark:text-white">My Profile</h3>
-                        <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Kelola informasi akun dan keamanan Anda di sini.</p>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                        <div>
+                            <h3 class="text-2xl font-black text-slate-800 dark:text-white">My Profile</h3>
+                            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Kelola informasi akun dan keamanan Anda di sini.</p>
+                        </div>
                     </div>
                     <div class="glass rounded-3xl shadow-xl p-8 border border-white/40 dark:border-slate-700/50 max-w-xl">
                         <h4 class="font-black text-slate-800 dark:text-white mb-6 text-lg border-b border-white/30 dark:border-slate-700/50 pb-3 flex items-center gap-2">
@@ -587,12 +654,12 @@
 
                 <!-- USERS DIRECTORY VIEW -->
                 <div id="content-users" class="content-section hidden space-y-6">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                         <div>
                             <h3 class="text-2xl font-black text-slate-800 dark:text-white">Users Directory</h3>
                             <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Kelola data member, admin, dan agency.</p>
                         </div>
-                        <button onclick="openUserModal()" id="btnAddUser" class="bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 shadow-lg shadow-brand/30 text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all">
+                        <button onclick="openUserModal()" id="btnAddUser" class="shrink-0 relative z-10 cursor-pointer bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 shadow-lg shadow-brand/30 text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all">
                             <i class="ph ph-user-plus text-xl"></i> Tambah User
                         </button>
                     </div>
@@ -617,7 +684,7 @@
 
                 <!-- AFFILIATE SYSTEM VIEW -->
                 <div id="content-affiliate" class="content-section hidden space-y-6">
-                    <div class="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                         <div>
                             <h3 class="text-2xl font-black text-slate-800 dark:text-white">Affiliate Dashboard</h3>
                             <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Pilih produk dan bagikan link affiliate Anda (Kode Ref: <span id="affiliateRefCode" class="font-bold text-brand uppercase"></span>).</p>
@@ -667,12 +734,12 @@
 
                 <!-- COUPONS VIEW -->
                 <div id="content-coupons" class="content-section hidden space-y-6">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                         <div>
                             <h3 class="text-2xl font-black text-slate-800 dark:text-white">Master Kupon</h3>
                             <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Buat kode diskon untuk promosi atau base affiliate Anda.</p>
                         </div>
-                        <button onclick="openCouponModal()" class="bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 shadow-lg shadow-brand/30 text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all">
+                        <button onclick="openCouponModal()" class="shrink-0 relative z-10 cursor-pointer bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 shadow-lg shadow-brand/30 text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all">
                             <i class="ph ph-plus-circle text-xl"></i> Tambah Kupon
                         </button>
                     </div>
@@ -697,9 +764,11 @@
 
                 <!-- BROADCAST VIEW -->
                 <div id="content-broadcast" class="content-section hidden space-y-6 max-w-4xl">
-                    <div class="mb-4">
-                        <h3 class="text-2xl font-black text-slate-800 dark:text-white">Broadcast System</h3>
-                        <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Kirim pesan massal ke Users via WhatsApp API Gateway.</p>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                        <div>
+                            <h3 class="text-2xl font-black text-slate-800 dark:text-white">Broadcast System</h3>
+                            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Kirim pesan massal ke Users via WhatsApp API Gateway.</p>
+                        </div>
                     </div>
                     <div class="glass rounded-3xl shadow-xl p-8 border border-white/40 dark:border-slate-700/50">
                         <form id="broadcastForm" class="space-y-6" onsubmit="prepareBroadcast(); simulateBroadcast(event)">
@@ -793,25 +862,6 @@
                                 </div>
                             </div>
 
-                            <!-- Live Chat Widget Settings -->
-                            <div class="pt-6 border-t border-white/40 dark:border-slate-700/50">
-                                <h4 class="font-black text-slate-800 dark:text-white mb-4 text-lg">Live Chat Widget</h4>
-                                <p class="text-sm text-slate-500 dark:text-slate-400 mb-5">Tampilkan tombol WhatsApp melayang di pojok layar untuk pengunjung website.</p>
-                                <div class="glass rounded-2xl p-5 border border-white/40 dark:border-slate-700/50 bg-white/30 dark:bg-slate-800/30">
-                                    <div class="flex items-center justify-between mb-4">
-                                        <label class="font-bold text-slate-700 dark:text-slate-300">Aktifkan WA Melayang</label>
-                                        <label class="relative inline-flex items-center cursor-pointer">
-                                            <input type="checkbox" id="settingWaFloatingActive" class="sr-only peer">
-                                            <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-green-500"></div>
-                                        </label>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Nomor WA CS / Admin</label>
-                                        <input type="text" id="settingWaFloatingNum" placeholder="Contoh: 08123456789" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium">
-                                    </div>
-                                </div>
-                            </div>
-
                             <!-- WA Gateway / Notification Settings -->
                             <div class="pt-6 border-t border-white/40 dark:border-slate-700/50">
                                 <h4 class="font-black text-slate-800 dark:text-white mb-4 text-lg">WhatsApp API Gateway</h4>
@@ -882,6 +932,21 @@
                                         <!-- Bank inputs injected here -->
                                     </div>
                                     <button onclick="addBankField()" class="text-xs bg-brand/10 hover:bg-brand/20 text-brand font-black px-4 py-2 rounded-lg shadow-sm transition-colors flex items-center gap-1"><i class="ph ph-plus-circle text-lg"></i> Add Bank</button>
+                                </div>
+
+                                <div class="bg-white/30 dark:bg-slate-800/30 p-5 rounded-2xl border border-white/40 dark:border-slate-700/50">
+                                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-4">3rd Party Gateways (Auto-Approval)</label>
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                        <label class="flex items-center gap-3 p-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-white/50 dark:bg-slate-900/50 cursor-pointer hover:border-brand transition-all">
+                                            <input type="checkbox" id="gwTripay" class="accent-brand w-5 h-5"> <span class="text-sm font-bold dark:text-white">Tripay</span>
+                                        </label>
+                                        <label class="flex items-center gap-3 p-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-white/50 dark:bg-slate-900/50 cursor-pointer hover:border-brand transition-all">
+                                            <input type="checkbox" id="gwDuitku" class="accent-brand w-5 h-5"> <span class="text-sm font-bold dark:text-white">Duitku</span>
+                                        </label>
+                                        <label class="flex items-center gap-3 p-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-white/50 dark:bg-slate-900/50 cursor-pointer hover:border-brand transition-all">
+                                            <input type="checkbox" id="gwSendit" class="accent-brand w-5 h-5"> <span class="text-sm font-bold dark:text-white">SendiT</span>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
 
@@ -1153,74 +1218,11 @@
         </div>
     </div>
 
-    <!-- Floating WA Button (Live Chat) -->
-    <a href="#" id="floatingWaBtn" target="_blank" class="hidden fixed bottom-6 left-6 bg-green-500 hover:bg-green-600 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-transform hover:scale-110 z-[55]">
-        <i class="ph ph-whatsapp-logo text-3xl"></i>
-    </a>
-
     <!-- Notification Toast -->
     <div id="toast" class="fixed bottom-6 right-6 glass text-slate-800 dark:text-white px-5 py-4 rounded-2xl shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 z-[60] flex items-center gap-3 border-l-4 border-l-green-500">
         <i id="toastIcon" class="ph ph-check-circle text-green-500 text-2xl drop-shadow-sm"></i>
         <span id="toastMsg" class="text-sm font-bold">Notification message</span>
     </div>
-
-    <!-- Trik Script Live Chat (Tanpa Edit app.js) -->
-    <script>
-        // Ini akan dijalankan tiap kali file dimuat, 
-        // fungsinya menarik setting yang tersimpan & mengatur tombol
-        document.addEventListener('DOMContentLoaded', () => {
-            // Karena settingnya akan diikat di atribut HTML oleh app.js nanti
-            // (Atau kita biarkan app.js nanti yang akan melakukan bind)
-            // Tapi untuk amannya kita letakkan di sini agar tombol bisa di-klik.
-            const waBtn = document.getElementById('floatingWaBtn');
-            const floatingCheckbox = document.getElementById('settingWaFloatingActive');
-            const floatingNum = document.getElementById('settingWaFloatingNum');
-
-            // Kita bind fungsi onChange agar langsung simpan ke localStorage sementara
-            // sebelum digabungkan dengan fungsi saveSettings bawaan.
-            if(floatingCheckbox && floatingNum) {
-                // Memuat state dari localStorage
-                const savedNum = localStorage.getItem('im_wa_num') || '';
-                const isActive = localStorage.getItem('im_wa_active') === 'true';
-                
-                floatingNum.value = savedNum;
-                floatingCheckbox.checked = isActive;
-
-                if(isActive && savedNum) {
-                    let cleanWa = String(savedNum).replace(/\D/g, '');
-                    if (cleanWa.startsWith('0')) cleanWa = '62' + cleanWa.substring(1);
-                    
-                    waBtn.href = `https://wa.me/${cleanWa}?text=Halo%20Admin,%20saya%20ingin%20bertanya...`;
-                    waBtn.classList.remove('hidden');
-                }
-
-                // Listener ketika tombol disave
-                const originalSave = window.saveSettings;
-                if(originalSave) {
-                    window.saveSettings = async function() {
-                        localStorage.setItem('im_wa_num', document.getElementById('settingWaFloatingNum').value);
-                        localStorage.setItem('im_wa_active', document.getElementById('settingWaFloatingActive').checked);
-                        
-                        const isNowActive = document.getElementById('settingWaFloatingActive').checked;
-                        const numNow = document.getElementById('settingWaFloatingNum').value;
-                        
-                        if(isNowActive && numNow) {
-                            let cleanWa = String(numNow).replace(/\D/g, '');
-                            if (cleanWa.startsWith('0')) cleanWa = '62' + cleanWa.substring(1);
-                            
-                            waBtn.href = `https://wa.me/${cleanWa}?text=Halo%20Admin,%20saya%20ingin%20bertanya...`;
-                            waBtn.classList.remove('hidden');
-                        } else {
-                            waBtn.classList.add('hidden');
-                        }
-                        
-                        // Jalankan fungsi aslinya
-                        return originalSave.apply(this, arguments);
-                    };
-                }
-            }
-        });
-    </script>
 
     <!-- Panggil File Javascript Eksternal -->
     <script src="app.js"></script>
