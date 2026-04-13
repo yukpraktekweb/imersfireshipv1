@@ -1124,7 +1124,7 @@
         <span id="toastMsg" class="text-sm font-bold">Notification message</span>
     </div>
 
-    <!-- ==========================================
+<!-- ==========================================
      JAVASCRIPT LOGIC (app.js)
      ========================================== -->
 <script>
@@ -1147,6 +1147,8 @@
             : "fixed bottom-6 right-6 glass text-slate-800 dark:text-white px-5 py-4 rounded-2xl shadow-2xl transform translate-y-0 opacity-100 transition-all duration-300 z-[60] flex items-center gap-3 border-l-4 border-l-green-500";
         
         setTimeout(() => { 
+            // FIXED: Hapus class yang nahan pop-up, lalu tambah class untuk menyembunyikannya
+            el.classList.remove('translate-y-0', 'opacity-100');
             el.classList.add('translate-y-20', 'opacity-0'); 
         }, 3000);
     };
@@ -1871,9 +1873,9 @@
                 <td class="px-6 py-4 font-black text-brand dark:text-brandHover">${window.formatRp(p.price)}</td>
                 <td class="px-6 py-4 text-right">
                     <div class="flex items-center justify-end gap-3">
-                        <button onclick="editProduct('${p.id}')" class="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 rounded-xl transition-colors" title="Edit"><i class="ph ph-pencil-simple text-xl"></i></button>
-                        <button onclick="duplicateProduct('${p.id}')" class="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-500/20 rounded-xl transition-colors" title="Duplicate"><i class="ph ph-copy text-xl"></i></button>
-                        <button onclick="deleteProduct('${p.id}')" class="p-2 text-red-600 dark:text-red-400 hover:bg-red-500/20 rounded-xl transition-colors" title="Delete"><i class="ph ph-trash text-xl"></i></button>
+                        <button onclick="window.editProduct('${p.id}')" class="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 rounded-xl transition-colors" title="Edit"><i class="ph ph-pencil-simple text-xl"></i></button>
+                        <button onclick="window.duplicateProduct('${p.id}')" class="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-500/20 rounded-xl transition-colors" title="Duplicate"><i class="ph ph-copy text-xl"></i></button>
+                        <button onclick="window.deleteProduct('${p.id}')" class="p-2 text-red-600 dark:text-red-400 hover:bg-red-500/20 rounded-xl transition-colors" title="Delete"><i class="ph ph-trash text-xl"></i></button>
                     </div>
                 </td>
             `;
@@ -2195,8 +2197,8 @@
                     <td class="px-6 py-4 font-mono text-xs text-brand font-bold">${u.affiliateCode || u.license || '-'}</td>
                     <td class="px-6 py-4 text-right">
                         <div class="flex items-center justify-end gap-2">
-                            <button onclick="editUser('${u.id}')" class="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 rounded-xl transition-colors" title="Edit"><i class="ph ph-pencil-simple text-xl"></i></button>
-                            <button onclick="deleteUser('${u.id}')" class="p-2 text-red-600 dark:text-red-400 hover:bg-red-500/20 rounded-xl transition-colors" title="Delete"><i class="ph ph-trash text-xl"></i></button>
+                            <button onclick="window.editUser('${u.id}')" class="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 rounded-xl transition-colors" title="Edit"><i class="ph ph-pencil-simple text-xl"></i></button>
+                            <button onclick="window.deleteUser('${u.id}')" class="p-2 text-red-600 dark:text-red-400 hover:bg-red-500/20 rounded-xl transition-colors" title="Delete"><i class="ph ph-trash text-xl"></i></button>
                         </div>
                     </td>
                 </tr>
@@ -3067,6 +3069,47 @@
         const l=document.getElementById('appLogoSidebar'); 
         if(src){ if(l){l.src=src;l.classList.remove('hidden');} } else { if(l){l.src='';l.classList.add('hidden');} } 
     };
+
+    // FIXED: Menambahkan kembali fungsi initChart yang hilang sebelumnya
+    window.initChart = () => {
+        setTimeout(() => {
+            const canvas = document.getElementById('salesChart');
+            // Pastikan elemen canvas ada dan user yang login adalah admin
+            if(!canvas || !window.appState.user || window.appState.user.role !== 'admin') return;
+
+            let existingChart = Chart.getChart(canvas);
+            if (existingChart) existingChart.destroy();
+            
+            const isDark = document.documentElement.classList.contains('dark');
+            const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
+            const textColor = isDark ? '#cbd5e1' : '#64748b';
+
+            new Chart(canvas.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: ['Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb'],
+                    datasets: [{
+                        label: 'Revenue',
+                        // Mock data untuk tampilan grafik
+                        data: [1200000, 1900000, 3000000, 5000000, 4200000, 6800000, 12450000], 
+                        borderColor: getComputedStyle(document.documentElement).getPropertyValue('--brand-color').trim() || '#4f46e5',
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        borderWidth: 3, tension: 0.4, fill: true,
+                        pointBackgroundColor: '#ffffff', pointBorderColor: '#4f46e5',
+                        pointBorderWidth: 2, pointRadius: 4, pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true, plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor } },
+                        x: { grid: { display: false }, ticks: { color: textColor } }
+                    }
+                }
+            });
+        }, 100);
+    };
+
 </script>
 </body>
 </html>
