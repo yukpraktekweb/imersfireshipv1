@@ -762,7 +762,6 @@
                         <form id="broadcastForm" class="space-y-6" onsubmit="prepareBroadcast(); simulateBroadcast(event)">
                             <div>
                                 <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Target Audience</label>
-                                <!-- Hidden input agar app.js tetap bisa membaca id="bcTarget" tanpa diubah -->
                                 <input type="hidden" id="bcTarget" value="all">
                                 
                                 <select id="bcTargetSelect" onchange="toggleCustomNumbers()" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium">
@@ -772,7 +771,6 @@
                                     <option value="custom">Nomor WA Custom (Manual)</option>
                                 </select>
                                 
-                                <!-- Box Textarea untuk input nomor manual (Muncul otomatis kalau pilih Custom) -->
                                 <textarea id="bcCustomNumbers" rows="2" placeholder="Masukkan nomor WA (pisahkan dengan koma), cth: 081234, 628567..." class="mt-3 w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white text-sm hidden"></textarea>
                             </div>
                             <div>
@@ -926,246 +924,7 @@
         </main>
     </div>
 
-    <!-- ==========================================
-         MODALS & OVERLAYS
-         ========================================== -->
-         
-    <!-- Product Form Modal -->
-    <div id="productModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 hidden flex justify-center items-center p-4">
-        <div class="glass rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col border border-white/20">
-            <div class="p-6 border-b border-white/20 dark:border-slate-700/50 flex justify-between items-center bg-white/40 dark:bg-slate-800/40">
-                <h3 class="text-xl font-black text-slate-800 dark:text-white" id="productModalTitle">Add/Edit Product</h3>
-                <button onclick="closeProductModal()" class="text-slate-500 hover:text-red-500 bg-white/50 dark:bg-slate-700/50 p-2 rounded-full transition-colors"><i class="ph ph-x text-xl"></i></button>
-            </div>
-            <div class="p-6 overflow-y-auto flex-1">
-                <form id="productForm" class="space-y-5">
-                    <input type="hidden" id="prodId">
-                    
-                    <div id="checkoutLinkContainer" class="hidden mb-4 p-5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                        <div class="flex-1 w-full overflow-hidden">
-                            <p class="text-xs font-black text-emerald-600 dark:text-emerald-400 mb-2 uppercase tracking-wider">Affiliate Checkout Link</p>
-                            <input type="text" id="prodCheckoutUrl" readonly class="w-full bg-white/50 dark:bg-slate-900/50 border border-emerald-500/30 rounded-lg text-sm text-emerald-700 dark:text-emerald-300 font-mono p-3 outline-none" value="">
-                        </div>
-                        <button type="button" onclick="copyCheckoutLink()" class="bg-gradient-to-r from-emerald-500 to-green-600 text-white px-5 py-3 rounded-xl shadow-lg shadow-green-500/30 flex items-center gap-2 text-sm font-bold transition-all w-full sm:w-auto justify-center mt-6 sm:mt-0">
-                            <i class="ph ph-copy text-xl"></i> Copy Link
-                        </button>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Gambar Produk (URL / Upload)</label>
-                        <div class="flex items-center gap-3 mb-3">
-                            <input type="url" id="prodImageUrl" placeholder="https://example.com/image.png" class="flex-1 px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm">
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <input type="file" id="prodImageFile" accept="image/*" class="w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-brand/10 file:text-brand hover:file:bg-brand/20 transition-all cursor-pointer">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div>
-                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Title</label>
-                            <input type="text" id="prodTitle" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white" required>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Price (Rp)</label>
-                            <input type="number" id="prodPrice" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white" required>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Type</label>
-                        <select id="prodType" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white" onchange="toggleProductFields()">
-                            <option value="download">Digital Download / General</option>
-                            <option value="lms">LMS / Course</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Short Description</label>
-                        <textarea id="prodDesc" rows="2" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white"></textarea>
-                    </div>
-                    
-                    <!-- NEW: Salespage URL -->
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Salespage URL (Eksternal Landing Page)</label>
-                        <input type="url" id="prodSalesPage" placeholder="https://domainkamu.com/promo" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm">
-                        <p class="text-[10px] text-slate-500 mt-1">Kosongkan jika ingin user langsung diarahkan ke halaman Checkout.</p>
-                    </div>
-
-                    <!-- NEW: Internal Salespage HTML -->
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Internal Salespage (HTML Custom)</label>
-                        <textarea id="prodSalesPageHtml" rows="4" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm font-mono leading-relaxed" placeholder="<h1>Ketik landing page HTML kustom kamu di sini...</h1>\n<p>Keuntungannya...</p>"></textarea>
-                        <p class="text-[10px] text-slate-500 mt-1">Gunakan ini jika kamu tidak punya URL Landing Page Eksternal.</p>
-                    </div>
-
-                    <!-- NEW: Affiliate Commission Settings -->
-                    <div class="border border-white/40 dark:border-slate-700/50 rounded-2xl p-5 bg-white/30 dark:bg-slate-800/30">
-                        <h4 class="font-black text-slate-800 dark:text-white mb-3 text-sm flex items-center gap-2"><i class="ph ph-money text-green-500 text-lg"></i> Komisi Affiliate</h4>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Tipe Komisi</label>
-                                <select id="prodCommType" class="w-full px-3 py-2 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm">
-                                    <option value="percent">Persentase (%)</option>
-                                    <option value="fixed">Nominal (Rp)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nilai Komisi</label>
-                                <input type="number" id="prodCommValue" placeholder="0" class="w-full px-3 py-2 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Dynamic Field: Download -->
-                    <div id="fieldDownload" class="border border-white/40 dark:border-slate-700/50 rounded-2xl p-5 bg-white/30 dark:bg-slate-800/30">
-                        <div class="flex justify-between items-center mb-4">
-                            <div>
-                                <label class="block text-sm font-black text-slate-800 dark:text-white">File Downloads</label>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Masukkan link file GDrive / Mediafire / dll.</p>
-                            </div>
-                            <button type="button" onclick="addDownloadField()" class="text-xs bg-brand/10 hover:bg-brand/20 text-brand font-black px-4 py-2 rounded-lg shadow-sm flex items-center gap-1 transition-colors"><i class="ph ph-plus text-lg"></i> Add Link</button>
-                        </div>
-                        <div id="downloadsContainer" class="space-y-3"></div>
-                    </div>
-
-                    <!-- Dynamic Field: LMS -->
-                    <div id="fieldLMS" class="hidden border border-white/40 dark:border-slate-700/50 rounded-2xl p-5 bg-white/30 dark:bg-slate-800/30">
-                        <div class="flex justify-between items-center mb-4">
-                            <div>
-                                <label class="block text-sm font-black text-slate-800 dark:text-white">Video Lessons</label>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Masukkan link YouTube materi Anda.</p>
-                            </div>
-                            <button type="button" onclick="addLessonField()" class="text-xs bg-brand/10 hover:bg-brand/20 text-brand font-black px-4 py-2 rounded-lg shadow-sm flex items-center gap-1 transition-colors"><i class="ph ph-plus text-lg"></i> Add Video</button>
-                        </div>
-                        <div id="lessonsContainer" class="space-y-3"></div>
-                    </div>
-
-                    <!-- Unified Access HTML Field (Optional) -->
-                    <div id="fieldAccess">
-                        <div class="flex items-center justify-between mb-2">
-                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300">Additional Info / Notes <span class="text-slate-400 dark:text-slate-500 font-medium">(Optional)</span></label>
-                        </div>
-                        <textarea id="prodAccess" rows="3" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm leading-relaxed" placeholder="Catatan tambahan (mendukung tag HTML dasar jika dibutuhkan)..."></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="p-6 border-t border-white/20 dark:border-slate-700/50 bg-white/40 dark:bg-slate-800/40 flex justify-end gap-3">
-                <button onclick="closeProductModal()" class="px-6 py-3 text-slate-600 dark:text-slate-300 font-bold hover:bg-white/50 dark:hover:bg-slate-700/50 rounded-xl transition-colors">Cancel</button>
-                <button onclick="saveProduct()" class="bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-brand/30">Save Product</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- User Form Modal -->
-    <div id="userModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 hidden flex justify-center items-center p-4">
-        <div class="glass rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col border border-white/20">
-            <div class="p-6 border-b border-white/20 dark:border-slate-700/50 flex justify-between items-center bg-white/40 dark:bg-slate-800/40">
-                <h3 class="text-xl font-black text-slate-800 dark:text-white" id="userModalTitle">Tambah User Baru</h3>
-                <button onclick="closeUserModal()" class="text-slate-500 hover:text-red-500 bg-white/50 dark:bg-slate-700/50 p-2 rounded-full transition-colors"><i class="ph ph-x text-xl"></i></button>
-            </div>
-            <div class="p-6 overflow-y-auto">
-                <form id="userForm" class="space-y-4">
-                    <input type="hidden" id="userId">
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Lengkap</label>
-                        <input type="text" id="userName" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium" required>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Email</label>
-                        <input type="email" id="userEmail" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium" required>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">No WhatsApp</label>
-                        <input type="text" id="userWa" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Role</label>
-                        <select id="userRole" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium">
-                            <option value="user">User (Member)</option>
-                            <option value="agency">Agency</option>
-                            <option value="admin">Admin</option>
-                        </select>
-                    </div>
-                    <div id="userPasswordContainer">
-                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Password</label>
-                        <input type="password" id="userPassword" placeholder="Kosongkan jika tidak ingin mengubah" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium">
-                    </div>
-                </form>
-            </div>
-            <div class="p-6 border-t border-white/20 dark:border-slate-700/50 bg-white/40 dark:bg-slate-800/40 flex justify-end gap-3">
-                <button onclick="closeUserModal()" class="px-6 py-3 text-slate-600 dark:text-slate-300 font-bold hover:bg-white/50 dark:hover:bg-slate-700/50 rounded-xl transition-colors">Batal</button>
-                <button onclick="saveUser()" class="bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-brand/30">Simpan User</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Template Form Modal -->
-    <div id="templateModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 hidden flex justify-center items-center p-4">
-        <div class="glass rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col border border-white/20">
-            <div class="p-6 border-b border-white/20 dark:border-slate-700/50 flex justify-between items-center bg-white/40 dark:bg-slate-800/40">
-                <h3 class="text-xl font-black text-slate-800 dark:text-white">Edit Notification Template</h3>
-                <button onclick="closeTemplateModal()" class="text-slate-500 hover:text-red-500 bg-white/50 dark:bg-slate-700/50 p-2 rounded-full transition-colors"><i class="ph ph-x text-xl"></i></button>
-            </div>
-            <div class="p-6 overflow-y-auto flex-1 space-y-6">
-                <div class="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 flex flex-col gap-2">
-                    <p class="text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider"><i class="ph ph-info"></i> Variabel Dinamis yang Bisa Digunakan:</p>
-                    <p class="text-sm font-mono text-slate-600 dark:text-slate-300">{nama}, {email}, {wa}, {produk}, {total}, {metode}, {status}, {password}, {komisi}</p>
-                </div>
-                <form id="templateForm" class="space-y-5">
-                    <input type="hidden" id="tmplId">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                        <div>
-                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Event Type</label>
-                            <input type="text" id="tmplType" readonly class="w-full px-4 py-3 bg-slate-100/50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-slate-500 font-mono font-bold cursor-not-allowed">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Template Title</label>
-                            <input type="text" id="tmplTitle" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white" required>
-                        </div>
-                    </div>
-                    <!-- Email Section -->
-                    <div class="border border-white/40 dark:border-slate-700/50 rounded-2xl p-5 bg-white/30 dark:bg-slate-800/30">
-                        <div class="flex items-center justify-between mb-4">
-                            <h4 class="font-black text-slate-800 dark:text-white flex items-center gap-2"><i class="ph ph-envelope-simple text-xl text-rose-500"></i> Email Template</h4>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <span class="text-xs font-bold text-slate-500 dark:text-slate-400">Aktifkan Email</span>
-                                <input type="checkbox" id="tmplActiveEmail" class="accent-brand w-4 h-4">
-                            </label>
-                        </div>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Email Subject</label>
-                                <input type="text" id="tmplSubject" class="w-full px-4 py-2 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Email Body (Mendukung HTML)</label>
-                                <textarea id="tmplEmailBody" rows="4" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm leading-relaxed"></textarea>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- WA Section -->
-                    <div class="border border-white/40 dark:border-slate-700/50 rounded-2xl p-5 bg-white/30 dark:bg-slate-800/30">
-                        <div class="flex items-center justify-between mb-4">
-                            <h4 class="font-black text-slate-800 dark:text-white flex items-center gap-2"><i class="ph ph-whatsapp-logo text-xl text-green-500"></i> WhatsApp Template</h4>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <span class="text-xs font-bold text-slate-500 dark:text-slate-400">Aktifkan WA</span>
-                                <input type="checkbox" id="tmplActiveWA" class="accent-brand w-4 h-4">
-                            </label>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Pesan WA (Gunakan * untuk tebal, _ untuk miring)</label>
-                            <textarea id="tmplWABody" rows="4" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm leading-relaxed"></textarea>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="p-6 border-t border-white/20 dark:border-slate-700/50 bg-white/40 dark:bg-slate-800/40 flex justify-end gap-3">
-                <button onclick="closeTemplateModal()" class="px-6 py-3 text-slate-600 dark:text-slate-300 font-bold hover:bg-white/50 dark:hover:bg-slate-700/50 rounded-xl transition-colors">Batal</button>
-                <button onclick="saveTemplate()" class="bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-brand/30">Simpan Template</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL FORM KUPON MASTER & AFFILIATE -->
+    <!-- NEW: MODAL FORM KUPON MASTER & AFFILIATE -->
     <div id="couponModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 hidden flex justify-center items-center p-4">
         <div class="glass rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col border border-white/20">
             <div class="p-6 border-b border-white/20 dark:border-slate-700/50 flex justify-between items-center bg-white/40 dark:bg-slate-800/40">
@@ -2291,21 +2050,25 @@
         };
 
         window.editTemplate = (id) => {
-            const template = window.appState.templates.find(t => t.id === id);
-            if(!template) return;
-            
-            document.getElementById('tmplId').value = template.id;
-            document.getElementById('tmplType').value = template.type;
-            document.getElementById('tmplTitle').value = template.title;
-            document.getElementById('tmplSubject').value = template.subject || '';
-            document.getElementById('tmplEmailBody').value = template.messageEmail || '';
-            document.getElementById('tmplWABody').value = template.messageWA || '';
-            
-            document.getElementById('tmplActiveEmail').checked = (template.isActiveEmail === true || template.isActiveEmail === 'true');
-            document.getElementById('tmplActiveWA').checked = (template.isActiveWA === true || template.isActiveWA === 'true');
-            
-            const tModal = document.getElementById('templateModal');
-            if (tModal) tModal.classList.remove('hidden');
+            try {
+                const template = window.appState.templates.find(t => t.id === id);
+                if(!template) return;
+                
+                if(document.getElementById('tmplId')) document.getElementById('tmplId').value = template.id;
+                if(document.getElementById('tmplType')) document.getElementById('tmplType').value = template.type;
+                if(document.getElementById('tmplTitle')) document.getElementById('tmplTitle').value = template.title;
+                if(document.getElementById('tmplSubject')) document.getElementById('tmplSubject').value = template.subject || '';
+                if(document.getElementById('tmplEmailBody')) document.getElementById('tmplEmailBody').value = template.messageEmail || '';
+                if(document.getElementById('tmplWABody')) document.getElementById('tmplWABody').value = template.messageWA || '';
+                
+                if(document.getElementById('tmplActiveEmail')) document.getElementById('tmplActiveEmail').checked = (template.isActiveEmail === true || template.isActiveEmail === 'true');
+                if(document.getElementById('tmplActiveWA')) document.getElementById('tmplActiveWA').checked = (template.isActiveWA === true || template.isActiveWA === 'true');
+                
+                const tModal = document.getElementById('templateModal');
+                if (tModal) tModal.classList.remove('hidden');
+            } catch (e) {
+                console.error("Error editing template: ", e);
+            }
         };
 
         window.closeTemplateModal = () => {
@@ -2314,16 +2077,16 @@
         };
 
         window.saveTemplate = async () => {
-            let id = document.getElementById('tmplId').value;
+            let id = document.getElementById('tmplId')?.value;
             if (!id) id = window.generateShortId();
             
-            const type = document.getElementById('tmplType').value;
-            const title = document.getElementById('tmplTitle').value;
-            const subject = document.getElementById('tmplSubject').value;
-            const emailBody = document.getElementById('tmplEmailBody').value;
-            const waBody = document.getElementById('tmplWABody').value;
-            const activeEmail = document.getElementById('tmplActiveEmail').checked;
-            const activeWA = document.getElementById('tmplActiveWA').checked;
+            const type = document.getElementById('tmplType')?.value || '';
+            const title = document.getElementById('tmplTitle')?.value || '';
+            const subject = document.getElementById('tmplSubject')?.value || '';
+            const emailBody = document.getElementById('tmplEmailBody')?.value || '';
+            const waBody = document.getElementById('tmplWABody')?.value || '';
+            const activeEmail = document.getElementById('tmplActiveEmail')?.checked || false;
+            const activeWA = document.getElementById('tmplActiveWA')?.checked || false;
 
             if(!title) {
                 showToast("Judul Template wajib diisi", "error");
@@ -3320,44 +3083,44 @@
         };
 
         window.saveSettings = async () => {
-            const name = document.getElementById('settingAppName').value;
-            const color = document.getElementById('settingColor').value;
-            const logoUrlInput = document.getElementById('settingLogoUrl').value;
-            const logoFileInput = document.getElementById('settingLogoFile').files[0];
-            
-            const rawAdminWa = document.getElementById('notifAdminWa').value;
-            const adminWa = window.formatPhoneNumber(rawAdminWa);
-
-            document.documentElement.style.setProperty('--brand-color', color);
-            document.documentElement.style.setProperty('--brand-hover', color); 
-            
-            document.querySelectorAll('.app-name-display').forEach(el => {
-                el.innerText = name || 'iMersFireship';
-            });
-            
-            const settingColorTextEl = document.getElementById('settingColorText');
-            if (settingColorTextEl) settingColorTextEl.value = color;
-
-            const bankItems = document.querySelectorAll('.bank-item');
-            const banks = [];
-            bankItems.forEach(el => {
-                const bname = el.querySelector('.b-name').value;
-                const bno = el.querySelector('.b-no').value;
-                const bowner = el.querySelector('.b-owner').value;
-                if(bname) banks.push({name: bname, no: bno, owner: bowner});
-            });
-
-            let finalLogoUrl = logoUrlInput;
-            if (logoFileInput) {
-                finalLogoUrl = await window.compressImage(logoFileInput, 400);
-            }
-            
-            const payload = {
-                appName: name, primaryColor: color, logoUrl: finalLogoUrl, banks: banks,
-                adminWa: adminWa
-            };
-
             try {
+                const name = document.getElementById('settingAppName')?.value || '';
+                const color = document.getElementById('settingColor')?.value || '#4f46e5';
+                const logoUrlInput = document.getElementById('settingLogoUrl')?.value || '';
+                const logoFileInput = document.getElementById('settingLogoFile')?.files?.[0];
+                
+                const rawAdminWa = document.getElementById('notifAdminWa')?.value || '';
+                const adminWa = window.formatPhoneNumber(rawAdminWa);
+
+                document.documentElement.style.setProperty('--brand-color', color);
+                document.documentElement.style.setProperty('--brand-hover', color); 
+                
+                document.querySelectorAll('.app-name-display').forEach(el => {
+                    el.innerText = name || 'iMersFireship';
+                });
+                
+                const settingColorTextEl = document.getElementById('settingColorText');
+                if (settingColorTextEl) settingColorTextEl.value = color;
+
+                const bankItems = document.querySelectorAll('.bank-item');
+                const banks = [];
+                bankItems.forEach(el => {
+                    const bname = el.querySelector('.b-name').value;
+                    const bno = el.querySelector('.b-no').value;
+                    const bowner = el.querySelector('.b-owner').value;
+                    if(bname) banks.push({name: bname, no: bno, owner: bowner});
+                });
+
+                let finalLogoUrl = logoUrlInput;
+                if (logoFileInput) {
+                    finalLogoUrl = await window.compressImage(logoFileInput, 400);
+                }
+                
+                const payload = {
+                    appName: name, primaryColor: color, logoUrl: finalLogoUrl, banks: banks,
+                    adminWa: adminWa
+                };
+
                 await apiCall('saveSettings', payload);
                 window.applyLogo(finalLogoUrl);
                 showToast("Admin settings saved!");
@@ -3376,7 +3139,12 @@
         window.showToast = (m, t='success') => {
             const el = document.getElementById('toast'), msgEl = document.getElementById('toastMsg');
             if(!el || !msgEl) return; msgEl.innerText = m;
-            el.classList.remove('hidden', 'translate-y-20', 'opacity-0');
+            
+            if (document.getElementById('toastIcon')) {
+                document.getElementById('toastIcon').className = t === 'error' ? "ph ph-x-circle text-red-500 text-2xl drop-shadow-sm" : "ph ph-check-circle text-green-500 text-2xl drop-shadow-sm";
+                el.className = t === 'error' ? "fixed bottom-6 right-6 glass text-slate-800 dark:text-white px-5 py-4 rounded-2xl shadow-2xl transform translate-y-0 opacity-100 transition-all duration-300 z-[60] flex items-center gap-3 border-l-4 border-l-red-500" : "fixed bottom-6 right-6 glass text-slate-800 dark:text-white px-5 py-4 rounded-2xl shadow-2xl transform translate-y-0 opacity-100 transition-all duration-300 z-[60] flex items-center gap-3 border-l-4 border-l-green-500";
+            }
+            
             setTimeout(() => { el.classList.add('translate-y-20', 'opacity-0'); }, 3000);
         };
 
