@@ -3149,24 +3149,68 @@
         } 
     };
 
-    window.submitCheckout = async () => { 
-        const n=document.getElementById('coName').value, e=document.getElementById('coEmail').value, p=document.getElementById('coPassword').value, w=window.formatPhoneNumber(document.getElementById('coWA').value), pm=document.querySelector('input[name="paymentMethod"]:checked'); 
-        if(!n||!e||!p||!w) return alert("Isi form lengkap"); 
-        if(!pm) return alert("Pilih pembayaran"); 
+     window.submitCheckout = async () => { 
+        const n = document.getElementById('coName').value;
+        const e = document.getElementById('coEmail').value;
+        const p = document.getElementById('coPassword').value;
+        const w = window.formatPhoneNumber(document.getElementById('coWA').value);
+        const pm = document.querySelector('input[name="paymentMethod"]:checked'); 
         
-        const pd=window.appState.currentCheckoutProduct, c=window.appState.currentCheckoutCoupon, u=window.appState.currentCheckoutUniqueCode; 
-        let d=c?(c.type==='percent'?pd.price*(c.value/100):c.value):0; 
-        if(d>pd.price) d=pd.price; 
-        const t=pd.price-113-d+u; 
+        const pd = window.appState.currentCheckoutProduct;
+        const c = window.appState.currentCheckoutCoupon;
+        const u = window.appState.currentCheckoutUniqueCode; 
+        
+        let d = c ? (c.type === 'percent' ? pd.price * (c.value / 100) : c.value) : 0; 
+        if(d > pd.price) d = pd.price; 
+        
+        // HITUNG TOTAL DULU SEBELUM VALIDASI PEMBAYARAN
+        // Jika harga produk murni 0, gak usah tambah kode unik dan biaya admin
+        let t = 0;
+        if (pd.price === 0) {
+            t = 0;
+        } else {
+            t = pd.price - 113 - d + u; 
+            if (t <= 0) t = 0; // Pastikan gak minus kalau diskon 100%
+        }
+        
+        if(!n || !e || !p || !w) return alert("Isi form lengkap"); 
+        
+        // Bypas validasi payment method kalau total bayar = 0 (Gratis)
+        if(t > 0 && !pm) return alert("Pilih pembayaran"); 
+
+        const finalPaymentMethod = t === 0 ? "Gratis / Rp 0" : pm.value;
+        const finalStatus = t === 0 ? "Paid" : "Pending";
         
         try{ 
             document.getElementById('btnSubmitCheckout').innerText="WAIT..."; 
             await apiCall('saveOrder',{
                 id: '', 
-                customerName:n, customerEmail:e, customerWA:w, productId:pd.id, productTitle:pd.title, basePrice:pd.price, discountApplied:d, totalPay:t, paymentMethod:pm.value, status:'Pending', userPasswordHash:await window.hashPassword(p), affiliateRef:localStorage.getItem('affiliateRef')||null, createdAt:Date.now()
+                customerName: n, customerEmail: e, customerWA: w, 
+                productId: pd.id, productTitle: pd.title, basePrice: pd.price, 
+                discountApplied: d, totalPay: t, paymentMethod: finalPaymentMethod, 
+                status: finalStatus, userPasswordHash: await window.hashPassword(p), 
+                affiliateRef: localStorage.getItem('affiliateRef') || null, createdAt: Date.now()
             }); 
-            document.getElementById('view-checkout').innerHTML=`<div class="text-center mt-20 glass p-10 rounded"><h2 class="text-2xl font-black">Order Sukses!</h2><p>Tunggu verifikasi admin.</p><a href="?" class="mt-4 block bg-brand text-white p-3 rounded">Login</a></div>`; 
-        } catch(er){ alert(er.message); } 
+            
+            // Pesan sukses dibedakan antara yang gratis dan yang bayar
+            const successMsg = t === 0 
+                ? `<p class="mb-8">Akses produk gratis Anda sudah terbuka! Silakan login.</p>` 
+                : `<p class="mb-8">Tunggu verifikasi admin. Akses produk akan terbuka otomatis.</p>`;
+                
+            document.getElementById('view-checkout').innerHTML=`
+                <div class="max-w-md mx-auto mt-20 glass p-10 rounded-3xl shadow-2xl text-center border border-white/40">
+                    <div class="w-24 h-24 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-green-500">
+                        <i class="ph ph-check-circle text-6xl"></i>
+                    </div>
+                    <h2 class="text-3xl font-black text-slate-800 dark:text-white mb-2">Order Diterima!</h2>
+                    ${successMsg}
+                    <a href="?" class="bg-brand text-white font-bold py-4 px-8 rounded-xl block shadow-lg shadow-brand/30">Selesai & Login</a>
+                </div>
+            `; 
+        } catch(er){ 
+            alert(er.message); 
+            document.getElementById('btnSubmitCheckout').innerText="CREATE ORDER";
+        } 
     };
 
     window.renderOrdersTable = () => { 
