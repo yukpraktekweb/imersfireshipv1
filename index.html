@@ -478,6 +478,11 @@
                             <i class="ph ph-plus-circle text-xl"></i> Add Product
                         </button>
                     </div>
+                    <div class="glass border border-blue-200 dark:border-blue-900/50 p-4 rounded-2xl text-sm text-blue-800 dark:text-blue-200 flex items-start sm:items-center gap-3 shadow-sm relative overflow-hidden">
+                        <div class="absolute inset-0 bg-blue-500/10 dark:bg-blue-500/20"></div>
+                        <i class="ph ph-info text-2xl shrink-0 relative z-10 text-blue-500"></i>
+                        <p class="relative z-10"><strong>Affiliate Ready:</strong> Edit produk untuk mengatur komisi dan link eksternal (Salespage) untuk Affiliate.</p>
+                    </div>
                     <div class="glass rounded-2xl overflow-hidden shadow-xl relative z-10">
                         <div class="overflow-x-auto">
                             <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
@@ -918,7 +923,21 @@
                                     </div>
                                     <button onclick="addBankField()" class="text-xs bg-brand/10 hover:bg-brand/20 text-brand font-black px-4 py-2 rounded-lg shadow-sm transition-colors flex items-center gap-1"><i class="ph ph-plus-circle text-lg"></i> Add Bank</button>
                                 </div>
-                              
+
+                                <div class="bg-white/30 dark:bg-slate-800/30 p-5 rounded-2xl border border-white/40 dark:border-slate-700/50">
+                                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-4">3rd Party Gateways (Auto-Approval)</label>
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                        <label class="flex items-center gap-3 p-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-white/50 dark:bg-slate-900/50 cursor-pointer hover:border-brand transition-all">
+                                            <input type="checkbox" id="gwTripay" class="accent-brand w-5 h-5"> <span class="text-sm font-bold dark:text-white">Tripay</span>
+                                        </label>
+                                        <label class="flex items-center gap-3 p-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-white/50 dark:bg-slate-900/50 cursor-pointer hover:border-brand transition-all">
+                                            <input type="checkbox" id="gwDuitku" class="accent-brand w-5 h-5"> <span class="text-sm font-bold dark:text-white">Duitku</span>
+                                        </label>
+                                        <label class="flex items-center gap-3 p-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-white/50 dark:bg-slate-900/50 cursor-pointer hover:border-brand transition-all">
+                                            <input type="checkbox" id="gwSendit" class="accent-brand w-5 h-5"> <span class="text-sm font-bold dark:text-white">SendiT</span>
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="pt-6 border-t border-white/40 dark:border-slate-700/50">
