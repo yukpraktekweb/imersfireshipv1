@@ -1030,7 +1030,8 @@
         <i id="toastIcon" class="ph ph-check-circle text-green-500 text-2xl drop-shadow-sm"></i>
         <span id="toastMsg" class="text-sm font-bold">Notification message</span>
     </div>
-<!-- ==========================================
+
+    <!-- ==========================================
          JAVASCRIPT LOGIC (app.js)
          ========================================== -->
     <script>
@@ -1722,7 +1723,7 @@
             tbody.innerHTML = '';
 
             if(window.appState.usersData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-10 text-center text-slate-500 font-bold">Belum ada user.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-10 text-center text-slate-500 font-bold">Belum ada user.</td></tr>`;
                 return;
             }
 
@@ -1743,13 +1744,16 @@
                     </div>`;
                 }
 
+                // SINKRONISASI KOLOM: Nama&Email | WA | Info Rekening | Role | Code | Action
                 tbody.innerHTML += `
                     <tr class="hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors border-b border-white/10 dark:border-slate-700/30">
                         <td class="px-6 py-4">
                             <p class="font-bold text-slate-800 dark:text-white text-base leading-tight">${u.name}</p>
                             <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">${u.email}</p>
-                            <div class="flex items-center gap-1 mt-1 text-[10px] font-bold text-brand bg-brand/5 px-1.5 py-0.5 rounded w-max">
-                                <i class="ph ph-whatsapp-logo"></i> ${u.wa || '-'}
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-1 text-xs font-bold text-brand bg-brand/5 px-2 py-1 rounded-lg w-max border border-brand/10">
+                                <i class="ph ph-whatsapp-logo text-green-500 text-sm"></i> ${u.wa || '-'}
                             </div>
                         </td>
                         <td class="px-6 py-4">${bankInfo}</td>
@@ -2314,7 +2318,7 @@
             }
         };
 
-        // --- COUPONS CRUD LOGIC ---
+        // --- COUPONS CRUD LOGIC (KHUSUS MASTER & AFFILIATE) ---
 
         window.renderCouponsTable = () => {
             const tbody = document.getElementById('couponsTableBody');
@@ -2322,6 +2326,7 @@
             tbody.innerHTML = '';
 
             const isUserAdmin = window.appState.user.role === 'admin';
+            // Admin bisa liat semua, Affiliate cuma bisa liat kupon punya dia
             const filteredCoupons = isUserAdmin ? window.appState.coupons : window.appState.coupons.filter(c => c.createdBy === window.appState.user.id);
 
             if(filteredCoupons.length === 0) {
@@ -2341,6 +2346,7 @@
                         : '<span class="text-red-500 text-xs font-black uppercase">Produk Dihapus</span>';
                 }
 
+                // Visual pembeda antara Master (buatan Admin) dan Affiliate (buatan user)
                 let isMaster = c.createdBy === 'admin' || !c.createdBy;
                 let masterBadge = isMaster 
                     ? `<span class="bg-purple-500/20 text-purple-700 dark:text-purple-400 px-2 py-0.5 rounded text-[10px] font-bold uppercase ml-2 align-middle">Master</span>` 
@@ -2395,6 +2401,7 @@
                 adminConfig.classList.add('hidden');
                 affConfig.classList.remove('hidden');
                 
+                // Affiliate cuma bisa milih dari Master Kupon buatan admin
                 masterSelect.innerHTML = '';
                 const masterCoupons = window.appState.coupons.filter(c => c.createdBy === 'admin' || !c.createdBy);
                 if(masterCoupons.length === 0) {
@@ -2434,18 +2441,20 @@
                 createdAt: Date.now()
             };
 
+            // Jika Admin, simpan sesuai form angka manual.
             if (isAdmin) {
                 data.type = document.getElementById('couponType').value;
                 data.value = Number(document.getElementById('couponValue').value);
                 data.applicableProductId = document.getElementById('couponProductId').value;
                 data.masterCouponId = '';
-                data.createdBy = 'admin';
+                data.createdBy = 'admin'; // paksa sebagai admin
                 
                 if(!data.value) {
                     showToast("Nilai potongan harus diisi", "error");
                     return;
                 }
             } 
+            // Jika User/Agency, Kloning nilai dari Master Kupon
             else {
                 const masterId = document.getElementById('masterCouponSelect').value;
                 if (!masterId) {
@@ -2488,6 +2497,7 @@
             const affConfig = document.getElementById('affiliateCouponConfig');
             const masterSelect = document.getElementById('masterCouponSelect');
 
+            // Cek apakah admin mengedit kupon punya dia, atau Affiliate mengedit kuponnya sendiri
             if (isAdmin || coupon.createdBy === 'admin' || !coupon.createdBy) {
                 adminConfig.classList.remove('hidden');
                 affConfig.classList.add('hidden');
@@ -2872,7 +2882,7 @@
             const email = document.getElementById('coEmail').value;
             const rawPassword = document.getElementById('coPassword').value;
             const rawWa = document.getElementById('coWA').value;
-            const wa = window.formatPhoneNumber(rawWa);
+            const wa = window.formatPhoneNumber(rawWa); // KUNCI PERBAIKAN WA
             const methodEl = document.querySelector('input[name="paymentMethod"]:checked');
             
             if(!name || !email || !rawPassword || !wa) {
