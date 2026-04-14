@@ -3164,69 +3164,118 @@
         } 
     };
 
-     window.submitCheckout = async () => { 
-        const n = document.getElementById('coName').value;
-        const e = document.getElementById('coEmail').value;
-        const p = document.getElementById('coPassword').value;
-        const w = window.formatPhoneNumber(document.getElementById('coWA').value);
-        const pm = document.querySelector('input[name="paymentMethod"]:checked'); 
-        
-        const pd = window.appState.currentCheckoutProduct;
-        const c = window.appState.currentCheckoutCoupon;
-        const u = window.appState.currentCheckoutUniqueCode; 
-        
-        let d = c ? (c.type === 'percent' ? pd.price * (c.value / 100) : c.value) : 0; 
-        if(d > pd.price) d = pd.price; 
-        
-        // HITUNG TOTAL DULU SEBELUM VALIDASI PEMBAYARAN
-        // Jika harga produk murni 0, gak usah tambah kode unik dan biaya admin
-        let t = 0;
-        if (pd.price === 0) {
-            t = 0;
-        } else {
-            t = pd.price - 113 - d + u; 
-            if (t <= 0) t = 0; // Pastikan gak minus kalau diskon 100%
-        }
-        
-        if(!n || !e || !p || !w) return alert("Isi form lengkap"); 
-        
-        // Bypas validasi payment method kalau total bayar = 0 (Gratis)
-        if(t > 0 && !pm) return alert("Pilih pembayaran"); 
+     window.submitCheckout = async () => {
+    const btn = document.getElementById('btnSubmitCheckout');
+    if (!btn) return;
 
-        const finalPaymentMethod = t === 0 ? "Gratis / Rp 0" : pm.value;
-        const finalStatus = t === 0 ? "Paid" : "Pending";
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ph ph-circle-notch animate-spin"></i> Processing...';
+
+    try {
+        // AMBIL DATA DARI FORM
+        const pd = window.appState.currentCheckoutProduct;
+        const n = document.getElementById('coName').value.trim();
+        const e = document.getElementById('coEmail').value.trim();
+        const w = window.formatPhoneNumber(document.getElementById('coWA').value);
+        const p = document.getElementById('coPassword').value;
+        const d = window.appState.currentCheckoutCoupon?.discount || 0;
+        const unique = window.appState.currentCheckoutUniqueCode || 0;
         
-        try{ 
-            document.getElementById('btnSubmitCheckout').innerText="WAIT..."; 
-            await apiCall('saveOrder',{
-                id: '', 
-                customerName: n, customerEmail: e, customerWA: w, 
-                productId: pd.id, productTitle: pd.title, basePrice: pd.price, 
-                discountApplied: d, totalPay: t, paymentMethod: finalPaymentMethod, 
-                status: finalStatus, userPasswordHash: await window.hashPassword(p), 
-                affiliateRef: localStorage.getItem('affiliateRef') || null, createdAt: Date.now()
-            }); 
-            
-            // Pesan sukses dibedakan antara yang gratis dan yang bayar
-            const successMsg = t === 0 
-                ? `<p class="mb-8">Akses produk gratis Anda sudah terbuka! Silakan login.</p>` 
-                : `<p class="mb-8">Tunggu verifikasi admin. Akses produk akan terbuka otomatis.</p>`;
-                
-            document.getElementById('view-checkout').innerHTML=`
-                <div class="max-w-md mx-auto mt-20 glass p-10 rounded-3xl shadow-2xl text-center border border-white/40">
-                    <div class="w-24 h-24 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-green-500">
-                        <i class="ph ph-check-circle text-6xl"></i>
+        // Nilai total bayar (t)
+        const t = Number(pd.price) + unique - d;
+        const finalStatus = t <= 0 ? 'Paid' : 'Pending';
+
+        if (!n || !e || !w) throw new Error("Nama, Email, dan WA wajib diisi!");
+
+        // 1. KIRIM DATA KE GOOGLE SHEETS
+        await apiCall('saveOrder', {
+            customerName: n,
+            customerEmail: e,
+            customerWA: w,
+            productId: pd.id,
+            productTitle: pd.title,
+            basePrice: pd.price,
+            discountApplied: d,
+            totalPay: t,
+            paymentMethod: 'Bank Transfer',
+            status: finalStatus,
+            userPasswordHash: await window.hashPassword(p),
+            affiliateRef: localStorage.getItem('affiliateRef') || null
+        });
+
+        // 2. TAMPILAN INSTRUKSI PEMBAYARAN (GANTI TOTAL ISI VIEW-CHECKOUT)
+        const successView = document.getElementById('view-checkout');
+        
+        if (t <= 0) {
+            // Tampilan Gratis
+            successView.innerHTML = `
+                <div class="max-w-md mx-auto py-20 px-6 text-center animate-in fade-in duration-500">
+                    <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-500/20">
+                        <i class="ph-fill ph-check-circle text-5xl"></i>
                     </div>
-                    <h2 class="text-3xl font-black text-slate-800 dark:text-white mb-2">Order Diterima!</h2>
-                    ${successMsg}
-                    <a href="?" class="bg-brand text-white font-bold py-4 px-8 rounded-xl block shadow-lg shadow-brand/30">Selesai & Login</a>
-                </div>
-            `; 
-        } catch(er){ 
-            alert(er.message); 
-            document.getElementById('btnSubmitCheckout').innerText="CREATE ORDER";
-        } 
-    };
+                    <h2 class="text-3xl font-black mb-4">Akses Aktif!</h2>
+                    <p class="text-slate-500 mb-8">Produk gratis Anda sudah bisa diakses. Silakan login untuk memulai.</p>
+                    <button onclick="window.location.href='/'" class="w-full py-4 bg-brand text-white rounded-2xl font-black shadow-xl shadow-brand/30">Login Sekarang</button>
+                </div>`;
+        } else {
+            // TAMPILAN BERBAYAR (INSTRUKSI TRANSFER)
+            const banks = window.appState.settings.banks || [];
+            let bankListHtml = banks.map(b => `
+                <div class="bg-white/60 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 mb-3">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">${b.name}</span>
+                        <i class="ph ph-bank text-brand"></i>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="text-xl font-black text-slate-800 dark:text-white">${b.no}</div>
+                        <button onclick="navigator.clipboard.writeText('${b.no}'); window.showToast('Rekening disalin')" class="text-brand p-2 hover:bg-brand/10 rounded-lg transition-colors">
+                            <i class="ph ph-copy"></i>
+                        </button>
+                    </div>
+                    <div class="text-xs text-slate-500 font-medium mt-1">a.n <span class="uppercase">${b.owner}</span></div>
+                </div>`).join('');
+
+            successView.innerHTML = `
+                <div class="max-w-md mx-auto py-10 px-4 text-center animate-in zoom-in duration-300">
+                    <h2 class="text-2xl font-black text-slate-800 dark:text-white mb-2">Order Diterima!</h2>
+                    <p class="text-sm text-slate-500 mb-8 font-medium">Lakukan transfer agar akses produk terbuka.</p>
+
+                    <div class="glass p-6 rounded-[2.5rem] border border-white/50 dark:border-slate-800 shadow-2xl relative overflow-hidden text-left mb-8">
+                        <div class="absolute -right-10 -top-10 w-32 h-32 bg-brand/10 rounded-full blur-3xl"></div>
+                        <div class="relative z-10">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center mb-1">Total Transfer</p>
+                            <div class="text-3xl font-black text-brand text-center mb-6 flex items-center justify-center gap-2">
+                                <span>${window.formatRp(t)}</span>
+                                <button onclick="navigator.clipboard.writeText('${t}'); window.showToast('Nominal disalin')" class="text-slate-300 hover:text-brand">
+                                    <i class="ph ph-copy text-sm"></i>
+                                </button>
+                            </div>
+
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center mb-3">Rekening Pembayaran:</p>
+                            ${bankListHtml || '<p class="text-center text-xs text-slate-400 italic">Data bank belum diatur di admin.</p>'}
+                            
+                            <div class="mt-6 p-4 bg-brand/5 dark:bg-brand/10 rounded-2xl border border-brand/10 text-center">
+                                <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    <strong>PENTING:</strong> Transfer <strong>SAMA PERSIS</strong> sampai digit terakhir untuk verifikasi otomatis.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="window.location.href='/'" class="w-full py-4 bg-brand text-white rounded-2xl font-black shadow-xl shadow-brand/30 transition-all mb-4">
+                        Ke Dashboard
+                    </button>
+                    <p class="text-xs text-slate-400 italic font-medium text-center">Instruksi ini juga sudah kami kirim ke WhatsApp Anda.</p>
+                </div>`;
+        }
+        window.showToast("Order Berhasil Dibuat!");
+    } catch (err) {
+        window.showToast(err.message, "error");
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'CREATE ORDER';
+    }
+};
 
     window.renderOrdersTable = () => { 
         const tb=document.getElementById('ordersTableBody'); 
