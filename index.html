@@ -1675,6 +1675,11 @@
             document.documentElement.style.setProperty('--brand-color', set.primaryColor);
             document.documentElement.style.setProperty('--brand-hover', set.primaryColor);
         }
+
+        if(set.secondaryColor) {
+        document.documentElement.style.setProperty('--secondary-color', set.secondaryColor);
+        }
+       
         if(set.appName) {
             document.querySelectorAll('.app-name-display').forEach(el => el.innerText = set.appName);
         }
