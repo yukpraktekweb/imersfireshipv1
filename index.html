@@ -1002,6 +1002,12 @@
                         <p class="text-[10px] text-slate-500 mt-1">Gunakan ini jika kamu tidak punya URL Landing Page Eksternal.</p>
                     </div>
 
+                    <div class="mb-4">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Internal Accesspage (HTML Custom)</label>
+                        <textarea id="prodAccessHtml" placeholder="Ketik konten akses kustom (HTML) untuk pembeli di sini..." class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm h-32 font-mono"></textarea>
+                        <p class="text-[10px] text-slate-400 mt-1 italic">Gunakan ini agar kustomer melihat panduan/akses dalam bentuk landing page tanpa padding.</p>
+                    </div>
+
                     <div class="border border-white/40 dark:border-slate-700/50 rounded-2xl p-5 bg-white/30 dark:bg-slate-800/30">
                         <h4 class="font-black text-slate-800 dark:text-white mb-3 text-sm flex items-center gap-2"><i class="ph ph-money text-green-500 text-lg"></i> Komisi Affiliate</h4>
                         <div class="grid grid-cols-2 gap-4">
@@ -1241,6 +1247,18 @@
         </div>
     </div>
 
+    <div id="htmlAccessModal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-xl z-[99] hidden flex justify-center items-start overflow-y-auto p-0">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-5xl min-h-screen relative shadow-2xl">
+        <button onclick="document.getElementById('htmlAccessModal').classList.add('hidden')" class="fixed top-6 right-6 bg-black/50 hover:bg-red-600 text-white w-12 h-12 rounded-full flex items-center justify-center z-[100] border border-white/20 shadow-xl">
+            <i class="ph ph-x text-2xl"></i>
+        </button>
+        <div id="htmlAccessContent" class="w-full p-0">
+            <!-- Konten HTML Kustom lo bakal nampil di sini tanpa padding -->
+            </div>
+        </div>
+    </div>
+
+    
     <!-- Notification Toast -->
     <div id="toast" class="fixed bottom-6 right-6 glass text-slate-800 dark:text-white px-5 py-4 rounded-2xl shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 z-[60] flex items-center gap-3 border-l-4 border-l-green-500">
         <i id="toastIcon" class="ph ph-check-circle text-green-500 text-2xl drop-shadow-sm"></i>
@@ -2104,9 +2122,9 @@
             const title = document.getElementById('prodTitle')?.value || '';
             const price = Number(document.getElementById('prodPrice')?.value || 0);
             const desc = document.getElementById('prodDesc')?.value || '';
-            const accessHtml = document.getElementById('prodAccess')?.value || '';
+            const accessHtml = document.getElementById('prodAccessHtml')?.value || '';
             const salesPageUrl = document.getElementById('prodSalesPage')?.value || '';
-            const salesPageHtml = document.getElementById('prodSalesPageHtml')?.value || '';
+            const salesPageHtml = document.getElementById('prodSalesPageHtml')?.value || ''
             const commissionType = document.getElementById('prodCommType')?.value || 'percent';
             const commissionValue = document.getElementById('prodCommValue')?.value || '';
             
@@ -2977,6 +2995,19 @@
     window.closeSalesPageModal = () => { 
         document.getElementById('salesPageModal').classList.add('hidden'); 
         document.getElementById('spModalContent').innerHTML = ''; 
+    };
+
+    window.openAccessModal = (encodedData) => {
+    try {
+        const rawHtml = decodeURIComponent(escape(atob(encodedData)));
+        const container = document.getElementById('htmlAccessContent');
+        if (container) {
+            container.innerHTML = rawHtml;
+            document.getElementById('htmlAccessModal').classList.remove('hidden');
+        }
+        } catch (e) {
+        console.error("Gagal load access HTML:", e);
+        }
     };
 
     window.openProductAccess = (id) => {
