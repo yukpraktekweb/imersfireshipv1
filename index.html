@@ -3370,11 +3370,13 @@
         try { 
             const n = document.getElementById('settingAppName').value;
             const c = document.getElementById('settingColor').value;
+            const sc = document.getElementById('settingSecondaryColor').value;
             const f = document.getElementById('settingLogoFile').files[0];
             const lu = document.getElementById('settingLogoUrl').value; 
             
             document.documentElement.style.setProperty('--brand-color', c); 
-            document.documentElement.style.setProperty('--brand-hover', c); 
+            document.documentElement.style.setProperty('--brand-hover', c);
+            document.documentElement.style.setProperty('--secondary-color', sc);
             document.querySelectorAll('.app-name-display').forEach(e => e.innerText = n || 'iMers'); 
             
             let bk = []; 
@@ -3399,7 +3401,8 @@
             // KIRIM SEMUA DATA KE GOOGLE SHEETS
             await apiCall('saveSettings', {
                 appName: n, 
-                primaryColor: c, 
+                primaryColor: c,
+                secondaryColor: sc,
                 logoUrl: img, 
                 banks: bk,
                 notifications: notifData
