@@ -1797,23 +1797,34 @@
     };
 
     window.handleForgot = async (e) => {
-        e.preventDefault();
-        const btn = document.getElementById('forgotBtn');
-        const email = document.getElementById('forgotEmail').value;
+    e.preventDefault();
+    const btn = document.getElementById('forgotBtn');
+    const email = document.getElementById('forgotEmail').value.trim();
+    
+    if(!email) return window.showToast("Email wajib diisi ya bro!", "error");
 
-        btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> Memproses...';
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> Memproses...';
 
-        try {
-            await apiCall('forgotPassword', {email});
+    try {
+        // Panggil backend action forgotPassword yang baru kita buat
+        const res = await apiCall('forgotPassword', { email: email });
+        
+        if(res.success) {
             window.showToast("Instruksi reset password telah dikirim ke Email/WA Anda.", "success");
             document.getElementById('forgotForm').reset();
-            window.switchAuthView('login');
-        } catch(err) {
-            window.showToast("Error: " + err.message, "error");
+            
+            // Balikin ke tampilan login biar kustomer bisa langsung coba password defaultnya
+            if(typeof window.switchAuthView === 'function') window.switchAuthView('login');
+        }
+        } catch (err) {
+        window.showToast("Error: " + err.message, "error");
         } finally {
-            btn.innerHTML = '<span>Kirim Reset Link</span> <i class="ph ph-paper-plane-tilt"></i>';
+        btn.disabled = false;
+        btn.innerHTML = '<span>Kirim Reset Link</span> <i class="ph ph-paper-plane-tilt"></i>';
         }
     };
+
 
     window.handleChangePassword = async (e) => {
         if(e) e.preventDefault();
